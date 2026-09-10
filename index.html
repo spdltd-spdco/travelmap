@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interactive Map Builder</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#ffffff; --ink:#1c2333; --muted:#6b7280;
+    --line:#e3e6eb; --accent:#2b6cff; --danger:#d64545;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+  #app{display:grid;grid-template-columns:320px 1fr;grid-template-rows:56px 1fr;height:100%}
+  header{grid-column:1/3;display:flex;align-items:center;gap:12px;padding:0 14px;background:var(--panel);border-bottom:1px solid var(--line)}
+  header h1{font-size:15px;margin:0;font-weight:650;white-space:nowrap}
+  header .spacer{flex:1}
+  #search{width:320px;max-width:38vw;padding:7px 10px;border:1px solid var(--line);border-radius:8px;font:inherit}
+  .btn{padding:7px 11px;border:1px solid var(--line);background:var(--panel);border-radius:8px;cursor:pointer;font:inherit;white-space:nowrap}
+  .btn:hover{background:#f0f2f5}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.primary:hover{filter:brightness(.95)}
+  aside{grid-row:2;grid-column:1;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+  .aside-top{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+  .toolrow{display:flex;flex-wrap:wrap;gap:8px}
+  .counts{color:var(--muted);font-size:12px}
+  #list{flex:1;overflow:auto;padding:10px 12px;display:flex;flex-direction:column;gap:10px}
+  .empty{color:var(--muted);font-size:13px;line-height:1.5}
+  .item{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .item.sel{border-color:var(--accent);box-shadow:0 0 0 2px rgba(43,108,255,.15)}
+  .item-head{display:flex;align-items:center;gap:6px;padding:7px 8px;background:#fafbfc}
+  .badge{width:22px;height:22px;display:grid;place-items:center;border-radius:6px;background:#eef1f6;font-size:13px;flex:none}
+  .item-head .name{flex:1;min-width:0;border:1px solid transparent;background:transparent;font:inherit;font-weight:600;padding:3px 4px;border-radius:6px}
+  .item-head .name:focus{border-color:var(--line);background:#fff;outline:none}
+  .mini{border:none;background:transparent;cursor:pointer;font-size:13px;color:var(--muted);padding:4px 5px;border-radius:6px}
+  .mini:hover{background:#eceef2;color:var(--ink)}
+  .mini.del:hover{color:var(--danger)}
+  .item-body{padding:8px;display:flex;flex-direction:column;gap:7px}
+  .item-body label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+  .item-body input[type=color]{width:34px;height:22px;padding:0;border:1px solid var(--line);border-radius:4px;background:none}
+  .item-body textarea{width:100%;min-height:38px;resize:vertical;border:1px solid var(--line);border-radius:7px;padding:6px 7px;font:inherit}
+  .meta{color:var(--muted);font-size:11px}
+  main{grid-row:2;grid-column:2;position:relative}
+  #map{position:absolute;inset:0}
+  .toggle-on{background:var(--accent)!important;border-color:var(--accent)!important;color:#fff!important}
+  #saveState{font-size:12px;color:var(--muted);align-self:center}
+  /* key modal */
+  #keyModal{position:fixed;inset:0;background:rgba(20,24,35,.55);display:none;align-items:center;justify-content:center;z-index:9999}
+  #keyModal.show{display:flex}
+  .card{background:#fff;border-radius:14px;padding:22px;max-width:460px;width:92vw;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+  .card h2{margin:0 0 6px;font-size:16px}
+  .card p{margin:6px 0;color:var(--muted);font-size:13px}
+  .card ol{margin:8px 0;padding-left:18px;color:var(--muted);font-size:12.5px;line-height:1.6}
+  .card input{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font:inherit;margin:8px 0}
+  .card a{color:var(--accent)}
+  @media (max-width:720px){
+    #app{grid-template-columns:1fr;grid-template-rows:56px 40vh 1fr}
+    aside{grid-row:2;grid-column:1;border-right:none;border-bottom:1px solid var(--line)}
+    main{grid-row:3;grid-column:1}
+    #search{max-width:44vw}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>🗺️ Interactive Map Builder</h1>
+    <input id="search" type="text" placeholder="Search a place to jump to…" disabled>
+    <span class="spacer"></span>
+    <span id="saveState"></span>
+    <button class="btn" id="changeKey">API key</button>
+  </header>
+
+  <aside>
+    <div class="aside-top">
+      <div class="toolrow">
+        <button class="btn" id="addMarkerBtn">📍 Add marker</button>
+        <button class="btn" id="exportBtn">Export GeoJSON</button>
+        <button class="btn" id="importBtn">Import</button>
+        <button class="btn" id="clearBtn">Clear all</button>
+        <input type="file" id="importFile" accept=".json,.geojson,application/json" hidden>
+      </div>
+      <div class="counts" id="counts">—</div>
+      <div class="counts">Draw regions with the tools on top of the map. Toggle <b>Add marker</b> then click the map to drop POIs. Everything auto-saves to this browser.</div>
+    </div>
+    <div id="list"></div>
+  </aside>
+
+  <main><div id="map"></div></main>
+</div>
+
+<div id="keyModal">
+  <div class="card">
+    <h2>Google Maps API key</h2>
+    <p>This tool runs entirely in your browser and needs your own key.</p>
+    <ol>
+      <li>Open the <a href="https://console.cloud.google.com/google/maps-apis/credentials" target="_blank" rel="noopener">Google Cloud Console → Credentials</a> and create an API key.</li>
+      <li>Enable <b>Maps JavaScript API</b> and <b>Places API</b> for the project (billing must be on; there's a large free monthly tier).</li>
+      <li>While testing from a local file, set the key's application restriction to <b>None</b> (referrer restrictions don't match <code>file://</code>). Lock it down later.</li>
+    </ol>
+    <input id="keyInput" type="text" placeholder="Paste API key here" autocomplete="off" spellcheck="false">
+    <button class="btn primary" id="keySave" style="width:100%">Save &amp; load map</button>
+    <p style="margin-top:10px">Stored only in this browser's <code>localStorage</code>. Clear it anytime with the <b>API key</b> button.</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ─────────────────────────────────────────────────────────────
+     PASTE YOUR GOOGLE MAPS API KEY BETWEEN THE QUOTES BELOW.
+     Leave it empty ("") to make the page prompt for a key instead
+     and remember it in each visitor's browser.
+     ───────────────────────────────────────────────────────────── */
+  const HARDCODED_KEY = "";
+
+  const LS_KEY = "imb.apiKey";
+  const LS_DATA = "imb.features.v1";
+  const DEFAULT_COLOR = "#2b6cff";
+
+  let map, drawingManager, autocomplete;
+  let features = [];          // {id, kind, name, color, notes, overlay}
+  let addMarkerMode = false;
+  let saveTimer = null;
+  let ready = false;
+
+  const $ = (s)=>document.querySelector(s);
+
+  // ---------- API key bootstrap ----------
+  const getKey = ()=> HARDCODED_KEY || localStorage.getItem(LS_KEY) || "";
+  const setKey = (k)=> localStorage.setItem(LS_KEY, (k||"").trim());
+
+  function showKeyModal(){
+    $("#keyInput").value = getKey();
+    $("#keyModal").classList.add("show");
+    $("#keyInput").focus();
+  }
+  function hideKeyModal(){ $("#keyModal").classList.remove("show"); }
+
+  function loadGoogle(){
+    const key = getKey();
+    if(!key){ showKeyModal(); return; }
+    if(document.getElementById("gmaps")) { location.reload(); return; }
+    const s = document.createElement("script");
+    s.id = "gmaps";
+    s.async = true;
+    s.src = "https://maps.googleapis.com/maps/api/js?key=" + encodeURIComponent(key) +
+            "&libraries=drawing,places,geometry&callback=__imbInit&loading=async";
+    s.onerror = function(){
+      alert("Could not load Google Maps. Check the key and that Maps JavaScript API is enabled.");
+      showKeyModal();
+    };
+    document.head.appendChild(s);
+  }
+
+  window.gm_authFailure = function(){
+    if(HARDCODED_KEY){
+      alert("Google Maps rejected the built-in API key.\n\nCheck, in Google Cloud Console:\n• Maps JavaScript API + Places API are enabled\n• billing is on\n• the key's HTTP-referrer restriction allows this exact URL (e.g. https://USERNAME.github.io/*)");
+      return;
+    }
+    alert("Google Maps rejected the API key (invalid, restricted, or billing not enabled). Enter a different key.");
+    localStorage.removeItem(LS_KEY);
+    showKeyModal();
+  };
+
+  $("#keySave").addEventListener("click", function(){
+    const v = $("#keyInput").value.trim();
+    if(!v){ $("#keyInput").focus(); return; }
+    setKey(v);
+    hideKeyModal();
+    loadGoogle();
+  });
+  $("#keyInput").addEventListener("keydown", e=>{ if(e.key==="Enter") $("#keySave").click(); });
+  if(HARDCODED_KEY) $("#changeKey").style.display = "none";
+  else $("#changeKey").addEventListener("click", showKeyModal);
+
+  // ---------- helpers ----------
+  const uid = ()=> Math.random().toString(36).slice(2,9);
+  const escapeHtml = (s)=> (s||"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const fmtLen = (m)=> m>1000 ? (m/1000).toFixed(2)+" km" : m.toFixed(0)+" m";
+  const fmtArea = (a)=> a>1e6 ? (a/1e6).toFixed(2)+" km²" : a>1e4 ? (a/1e4).toFixed(2)+" ha" : a.toFixed(0)+" m²";
+  const iconFor = (k)=> ({marker:"📍",polygon:"⬠",polyline:"〰️",rectangle:"▭",circle:"◯"}[k]||"•");
+
+  function shapeStyle(color){
+    color = color || DEFAULT_COLOR;
+    return { fillColor:color, fillOpacity:0.15, strokeColor:color, strokeWeight:2,
+             editable:true, draggable:true, clickable:true };
+  }
+  function lineStyle(color){
+    return { strokeColor: color||DEFAULT_COLOR, strokeWeight:3, editable:true, draggable:true, clickable:true };
+  }
+  function defaultName(kind){
+    const n = features.filter(f=>f.kind===kind).length + 1;
+    const label = {marker:"Marker",polygon:"Region",polyline:"Path",rectangle:"Rectangle",circle:"Circle"}[kind]||"Feature";
+    return label + " " + n;
+  }
+
+  // ---------- init ----------
+  window.__imbInit = function(){
+    hideKeyModal();
+    const saved = loadData();
+    const view = saved.view;
+    map = new google.maps.Map($("#map"), {
+      center: view ? view.center : {lat:39.5, lng:-98.35},
+      zoom:   view ? view.zoom   : 4,
+      mapTypeControl:true, streetViewControl:false, fullscreenControl:true,
+      mapTypeId: "roadmap"
+    });
+    map.addListener("idle", scheduleSave);
+
+    drawingManager = new google.maps.drawing.DrawingManager({
+      drawingMode:null,
+      drawingControl:true,
+      drawingControlOptions:{
+        position: google.maps.ControlPosition.TOP_CENTER,
+        drawingModes:["marker","polyline","polygon","rectangle","circle"]
+      },
+      markerOptions:{ draggable:true },
+      polygonOptions: shapeStyle(),
+      polylineOptions: lineStyle(),
+      rectangleOptions: shapeStyle(),
+      circleOptions: shapeStyle()
+    });
+    drawingManager.setMap(map);
+
+    google.maps.event.addListener(drawingManager, "overlaycomplete", function(e){
+      drawingManager.setDrawingMode(null);
+      addFeature({ kind:e.type, overlay:e.overlay });
+    });
+
+    map.addListener("click", function(e){
+      if(!addMarkerMode) return;
+      const m = new google.maps.Marker({ position:e.latLng, map, draggable:true });
+      addFeature({ kind:"marker", overlay:m });
+    });
+
+    // Places search
+    const input = $("#search");
+    input.disabled = false;
+    autocomplete = new google.maps.places.Autocomplete(input, { fields:["geometry","name"] });
+    autocomplete.addListener("place_changed", function(){
+      const p = autocomplete.getPlace();
+      if(!p || !p.geometry) return;
+      if(p.geometry.viewport) map.fitBounds(p.geometry.viewport);
+      else { map.panTo(p.geometry.location); map.setZoom(15); }
+    });
+
+    (saved.features || []).forEach(restoreFeature);
+    ready = true;
+    renderList();
+  };
+
+  // ---------- feature lifecycle ----------
+  function addFeature(opt){
+    const f = {
+      id: opt.id || uid(),
+      kind: opt.kind,
+      name: opt.name || defaultName(opt.kind),
+      color: opt.color || DEFAULT_COLOR,
+      notes: opt.notes || "",
+      overlay: opt.overlay
+    };
+    features.push(f);
+    wireOverlay(f);
+    if(ready){ renderList(); scheduleSave(); }
+    return f;
+  }
+
+  function removeFeature(f){
+    f.overlay.setMap(null);
+    features = features.filter(x=>x.id!==f.id);
+    renderList(); scheduleSave();
+  }
+
+  function wireOverlay(f){
+    const o = f.overlay, save = scheduleSave;
+    o.addListener("click", ()=> selectFeature(f.id));
+    if(f.kind==="marker"){
+      o.addListener("dragend", save);
+    } else if(f.kind==="polygon" || f.kind==="polyline"){
+      const path = o.getPath();
+      ["set_at","insert_at","remove_at"].forEach(ev=> path.addListener(ev, save));
+      o.addListener("dragend", save);
+    } else if(f.kind==="rectangle"){
+      o.addListener("bounds_changed", save);
+      o.addListener("dragend", save);
+    } else if(f.kind==="circle"){
+      o.addListener("center_changed", save);
+      o.addListener("radius_changed", save);
+      o.addListener("dragend", save);
+    }
+  }
+
+  function applyColor(f){
+    if(f.kind==="marker") return;
+    if(f.kind==="polyline") f.overlay.setOptions({ strokeColor:f.color });
+    else f.overlay.setOptions({ fillColor:f.color, strokeColor:f.color });
+  }
+
+  function zoomTo(f){
+    const o = f.overlay;
+    if(f.kind==="marker"){ map.panTo(o.getPosition()); map.setZoom(Math.max(map.getZoom(),14)); }
+    else if(f.kind==="circle" || f.kind==="rectangle"){ map.fitBounds(o.getBounds()); }
+    else {
+      const b = new google.maps.LatLngBounds();
+      o.getPath().forEach(ll=> b.extend(ll));
+      map.fitBounds(b);
+    }
+  }
+
+  function selectFeature(id){
+    document.querySelectorAll(".item").forEach(el=> el.classList.toggle("sel", el.dataset.id===id));
+    const el = document.querySelector('.item[data-id="'+id+'"]');
+    if(el) el.scrollIntoView({block:"nearest", behavior:"smooth"});
+  }
+
+  // ---------- persistence ----------
+  function scheduleSave(){
+    if(!ready) return;
+    clearTimeout(saveTimer);
+    $("#saveState").textContent = "Saving…";
+    saveTimer = setTimeout(saveData, 400);
+  }
+  function serializeFeature(f){
+    const o = f.overlay;
+    const d = { id:f.id, kind:f.kind, name:f.name, color:f.color, notes:f.notes };
+    if(f.kind==="marker"){
+      const p=o.getPosition(); d.position={lat:p.lat(), lng:p.lng()};
+    } else if(f.kind==="polygon" || f.kind==="polyline"){
+      d.path = o.getPath().getArray().map(ll=>({lat:ll.lat(), lng:ll.lng()}));
+    } else if(f.kind==="rectangle"){
+      const b=o.getBounds(), ne=b.getNorthEast(), sw=b.getSouthWest();
+      d.bounds={ north:ne.lat(), east:ne.lng(), south:sw.lat(), west:sw.lng() };
+    } else if(f.kind==="circle"){
+      const c=o.getCenter(); d.center={lat:c.lat(), lng:c.lng()}; d.radius=o.getRadius();
+    }
+    return d;
+  }
+  function saveData(){
+    try{
+      const data = {
+        view: map ? { center:{lat:map.getCenter().lat(), lng:map.getCenter().lng()}, zoom:map.getZoom() } : null,
+        features: features.map(serializeFeature)
+      };
+      localStorage.setItem(LS_DATA, JSON.stringify(data));
+      $("#saveState").textContent = "Saved";
+    }catch(e){ $("#saveState").textContent = "Save failed"; }
+  }
+  function loadData(){
+    try{ return JSON.parse(localStorage.getItem(LS_DATA)) || {}; }catch(e){ return {}; }
+  }
+  function restoreFeature(d){
+    let overlay;
+    const st = shapeStyle(d.color);
+    if(d.kind==="marker"){
+      overlay = new google.maps.Marker({ position:d.position, map, draggable:true });
+    } else if(d.kind==="polygon"){
+      overlay = new google.maps.Polygon(Object.assign({}, st, { paths:d.path, map }));
+    } else if(d.kind==="polyline"){
+      overlay = new google.maps.Polyline(Object.assign({}, lineStyle(d.color), { path:d.path, map }));
+    } else if(d.kind==="rectangle"){
+      overlay = new google.maps.Rectangle(Object.assign({}, st, {
+        bounds:{ north:d.bounds.north, south:d.bounds.south, east:d.bounds.east, west:d.bounds.west }, map }));
+    } else if(d.kind==="circle"){
+      overlay = new google.maps.Circle(Object.assign({}, st, { center:d.center, radius:d.radius, map }));
+    } else { return; }
+    addFeature({ kind:d.kind, overlay, name:d.name, color:d.color, notes:d.notes, id:d.id });
+  }
+
+  // ---------- list UI ----------
+  function metaFor(f){
+    const o=f.overlay, G=google.maps.geometry.spherical;
+    try{
+      if(f.kind==="marker"){ const p=o.getPosition(); return p.lat().toFixed(5)+", "+p.lng().toFixed(5); }
+      if(f.kind==="circle"){ return "r "+fmtLen(o.getRadius())+" · "+fmtArea(Math.PI*Math.pow(o.getRadius(),2)); }
+      if(f.kind==="rectangle"){
+        const b=o.getBounds(), ne=b.getNorthEast(), sw=b.getSouthWest();
+        const ring=[ne,{lat:ne.lat(),lng:sw.lng()},sw,{lat:sw.lat(),lng:ne.lng()}];
+        return fmtArea(G.computeArea(ring));
+      }
+      if(f.kind==="polygon"){ return o.getPath().getLength()+" pts · "+fmtArea(G.computeArea(o.getPath())); }
+      if(f.kind==="polyline"){ return o.getPath().getLength()+" pts · "+fmtLen(G.computeLength(o.getPath())); }
+    }catch(e){}
+    return "";
+  }
+  function updateCounts(){
+    const r = features.filter(f=>["polygon","rectangle","circle"].includes(f.kind)).length;
+    const m = features.filter(f=>f.kind==="marker").length;
+    const p = features.filter(f=>f.kind==="polyline").length;
+    $("#counts").textContent =
+      r+" region"+(r!==1?"s":"")+" · "+m+" marker"+(m!==1?"s":"")+(p? " · "+p+" path"+(p!==1?"s":"") : "");
+  }
+  function renderList(){
+    const wrap = $("#list");
+    wrap.innerHTML = "";
+    if(!features.length){
+      wrap.innerHTML = '<p class="empty">Nothing yet. Use the shape tools at the top of the map to draw regions/boundaries, or toggle <b>Add marker</b> and click the map to place points of interest.</p>';
+      updateCounts(); return;
+    }
+    features.forEach(function(f){
+      const el = document.createElement("div");
+      el.className = "item"; el.dataset.id = f.id;
+      const colorCtl = (f.kind!=="marker")
+        ? '<label>Color <input type="color" class="color" value="'+f.color+'"></label>' : "";
+      el.innerHTML =
+        '<div class="item-head">'+
+          '<span class="badge">'+iconFor(f.kind)+'</span>'+
+          '<input class="name" value="'+escapeHtml(f.name)+'">'+
+          '<button class="mini zoom" title="Zoom to">⤢</button>'+
+          '<button class="mini del" title="Delete">✕</button>'+
+        '</div>'+
+        '<div class="item-body">'+
+          colorCtl+
+          '<textarea class="notes" placeholder="Notes / description">'+escapeHtml(f.notes)+'</textarea>'+
+          '<span class="meta">'+metaFor(f)+'</span>'+
+        '</div>';
+      wrap.appendChild(el);
+      el.querySelector(".name").addEventListener("input", e=>{ f.name=e.target.value; scheduleSave(); });
+      el.querySelector(".notes").addEventListener("input", e=>{ f.notes=e.target.value; scheduleSave(); });
+      el.querySelector(".zoom").addEventListener("click", ()=> zoomTo(f));
+      el.querySelector(".del").addEventListener("click", ()=>{ if(confirm('Delete "'+f.name+'"?')) removeFeature(f); });
+      const c = el.querySelector(".color");
+      if(c) c.addEventListener("input", e=>{ f.color=e.target.value; applyColor(f); scheduleSave(); });
+    });
+    updateCounts();
+  }
+
+  // ---------- toolbar ----------
+  $("#addMarkerBtn").addEventListener("click", function(){
+    addMarkerMode = !addMarkerMode;
+    this.classList.toggle("toggle-on", addMarkerMode);
+    this.textContent = addMarkerMode ? "📍 Click map to place… (Esc)" : "📍 Add marker";
+    if(map) map.setOptions({ draggableCursor: addMarkerMode ? "crosshair" : null });
+    if(addMarkerMode && drawingManager) drawingManager.setDrawingMode(null);
+  });
+  document.addEventListener("keydown", function(e){
+    if(e.key==="Escape"){
+      if(addMarkerMode) $("#addMarkerBtn").click();
+      if(drawingManager) drawingManager.setDrawingMode(null);
+    }
+  });
+
+  $("#clearBtn").addEventListener("click", function(){
+    if(!features.length) return;
+    if(!confirm("Remove all regions and markers?")) return;
+    features.forEach(f=> f.overlay.setMap(null));
+    features = []; renderList(); scheduleSave();
+  });
+
+  // ---------- GeoJSON ----------
+  function circleToRing(center, radius){
+    const R=6378137, lat=center.lat()*Math.PI/180, lng=center.lng()*Math.PI/180, out=[];
+    for(let i=0;i<=64;i++){
+      const brng=i*2*Math.PI/64;
+      const lat2=Math.asin(Math.sin(lat)*Math.cos(radius/R)+Math.cos(lat)*Math.sin(radius/R)*Math.cos(brng));
+      const lng2=lng+Math.atan2(Math.sin(brng)*Math.sin(radius/R)*Math.cos(lat),
+                                Math.cos(radius/R)-Math.sin(lat)*Math.sin(lat2));
+      out.push([lng2*180/Math.PI, lat2*180/Math.PI]);
+    }
+    return out;
+  }
+  function toGeoJSON(){
+    const fc = { type:"FeatureCollection", features:[] };
+    features.forEach(function(f){
+      const o=f.overlay; let geom=null; const props={ name:f.name, notes:f.notes, color:f.color, kind:f.kind };
+      if(f.kind==="marker"){ const p=o.getPosition(); geom={type:"Point", coordinates:[p.lng(), p.lat()]}; }
+      else if(f.kind==="polyline"){ geom={type:"LineString", coordinates:o.getPath().getArray().map(ll=>[ll.lng(),ll.lat()])}; }
+      else if(f.kind==="polygon"){
+        const r=o.getPath().getArray().map(ll=>[ll.lng(),ll.lat()]);
+        if(r.length) r.push(r[0]);
+        geom={type:"Polygon", coordinates:[r]};
+      }
+      else if(f.kind==="rectangle"){
+        const b=o.getBounds(), ne=b.getNorthEast(), sw=b.getSouthWest();
+        geom={type:"Polygon", coordinates:[[[sw.lng(),sw.lat()],[ne.lng(),sw.lat()],[ne.lng(),ne.lat()],[sw.lng(),ne.lat()],[sw.lng(),sw.lat()]]]};
+      }
+      else if(f.kind==="circle"){
+        props.radius=o.getRadius();
+        props.center=[o.getCenter().lng(), o.getCenter().lat()];
+        geom={type:"Polygon", coordinates:[circleToRing(o.getCenter(), o.getRadius())]};
+      }
+      fc.features.push({ type:"Feature", properties:props, geometry:geom });
+    });
+    return fc;
+  }
+  function download(name, text){
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(new Blob([text], {type:"application/json"}));
+    a.download=name; document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(a.href);
+  }
+  $("#exportBtn").addEventListener("click", ()=>{
+    download("map-features.geojson", JSON.stringify(toGeoJSON(), null, 2));
+  });
+
+  function fromGeoJSON(fc){
+    (fc.features||[]).forEach(function(gf){
+      const g=gf.geometry, p=gf.properties||{}, color=p.color||DEFAULT_COLOR;
+      if(!g) return;
+      if(g.type==="Point"){
+        restoreFeature({ kind:"marker", position:{lat:g.coordinates[1],lng:g.coordinates[0]}, name:p.name, notes:p.notes, color, id:uid() });
+      } else if(g.type==="LineString"){
+        restoreFeature({ kind:"polyline", path:g.coordinates.map(c=>({lat:c[1],lng:c[0]})), name:p.name, notes:p.notes, color, id:uid() });
+      } else if(g.type==="Polygon"){
+        if(p.kind==="circle" && p.radius && p.center){
+          restoreFeature({ kind:"circle", center:{lat:p.center[1],lng:p.center[0]}, radius:p.radius, name:p.name, notes:p.notes, color, id:uid() });
+        } else {
+          const ring=g.coordinates[0].slice(0,-1).map(c=>({lat:c[1],lng:c[0]}));
+          restoreFeature({ kind:"polygon", path:ring, name:p.name, notes:p.notes, color, id:uid() });
+        }
+      } else if(g.type==="MultiPolygon"){
+        g.coordinates.forEach(function(poly){
+          const ring=poly[0].slice(0,-1).map(c=>({lat:c[1],lng:c[0]}));
+          restoreFeature({ kind:"polygon", path:ring, name:p.name, notes:p.notes, color, id:uid() });
+        });
+      }
+    });
+    renderList(); scheduleSave();
+  }
+  $("#importBtn").addEventListener("click", ()=> $("#importFile").click());
+  $("#importFile").addEventListener("change", function(e){
+    const file = e.target.files[0]; if(!file) return;
+    const rd = new FileReader();
+    rd.onload = ()=>{
+      try{ fromGeoJSON(JSON.parse(rd.result)); }
+      catch(err){ alert("Could not parse that file as GeoJSON."); }
+    };
+    rd.readAsText(file);
+    e.target.value = "";
+  });
+
+  // ---------- go ----------
+  loadGoogle();
+})();
+</script>
+</body>
+</html>
