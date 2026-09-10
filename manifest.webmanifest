@@ -1,7 +1,7 @@
 {
-  "name": "Japan Map",
-  "short_name": "Japan Map",
-  "description": "Neighborhood regions and points of interest for a Japan trip, with live place search.",
+  "name": "TravelMap",
+  "short_name": "TravelMap",
+  "description": "Neighborhood regions and points of interest for a trip, with live place search.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

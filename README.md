@@ -1,4 +1,4 @@
-# Japan Map
+# TravelMap
 
 A personal, online-only map for a trip:
 
@@ -21,7 +21,7 @@ Plain static HTML + the Google Maps JavaScript API. No build step, no backend.
 2. Enable **Maps JavaScript API** and **Places API** for the project (billing on; the
    free monthly allowances cover personal use many times over).
 3. Restrict the key → *Application restrictions* → **Websites**, add:
-   - `https://YOUR-PAGES-URL/*`  (e.g. `https://japan-map.pages.dev/*`)
+   - `https://YOUR-PAGES-URL/*`  (e.g. `https://travelmap.pages.dev/*`)
    - `http://localhost:*/*`  (local testing)
    *API restrictions* → **Maps JavaScript API** + **Places API** only.
 
