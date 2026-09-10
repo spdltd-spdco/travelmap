@@ -146,11 +146,10 @@
   // other visitors). Only set it here for a private/local build.
   const HARDCODED_KEY = "";
 
-  // Public raw URL of your data file. Leave "" to load ./data/japan.geojson from wherever
-  // this page is served. Set it to fetch the data straight from GitHub so updates need
-  // only a `git push` to the data repo — no redeploy of this app.
-  // e.g. "https://raw.githubusercontent.com/USER/REPO/main/data/japan.geojson"
-  const DATA_URL = "";
+  // Public raw URL of the data file — updates go live on a plain `git push`, no redeploy.
+  // The app falls back to ./data/japan.geojson if this can't be fetched (e.g. local dev
+  // before the first push), so it's safe to leave set.
+  const DATA_URL = "https://raw.githubusercontent.com/spdltd-spdco/travelmap/main/data/japan.geojson";
 
   const CATS = {
     hotel:      { color:"#4361ee", icon:"🛏️",  label:"Hotel" },
@@ -254,15 +253,22 @@
   };
 
   // ---------- data ----------
-  function dataSrc(){
-    const base = DATA_URL || "data/japan.geojson";
-    return base + (base.indexOf("?")<0 ? "?" : "&") + "t=" + Date.now();
+  function bust(u){ return u + (u.indexOf("?")<0 ? "?" : "&") + "t=" + Date.now(); }
+  async function fetchData(){
+    const cands = [...new Set([DATA_URL, "data/japan.geojson"].filter(Boolean))];
+    let lastErr;
+    for(const u of cands){
+      try{
+        const res = await fetch(bust(u), { cache:"no-store" });
+        if(!res.ok) throw new Error("HTTP " + res.status + " · " + u);
+        return await res.json();
+      }catch(e){ lastErr = e; }
+    }
+    throw lastErr || new Error("no data source");
   }
   async function loadData(fit){
     try{
-      const res = await fetch(dataSrc(), { cache:"no-store" });
-      if(!res.ok) throw new Error("HTTP " + res.status);
-      const gj = await res.json();
+      const gj = await fetchData();
       renderData(gj, fit);
       const when = gj.updated ? new Date(gj.updated) : null;
       $("#legend-updated").innerHTML =
