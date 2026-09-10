@@ -2,536 +2,432 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Interactive Map Builder</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1c2333">
+<title>Japan Map</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg">
+<link rel="apple-touch-icon" href="icons/icon.svg">
 <style>
   :root{
     --bg:#f6f7f9; --panel:#ffffff; --ink:#1c2333; --muted:#6b7280;
     --line:#e3e6eb; --accent:#2b6cff; --danger:#d64545;
+    --sheet-h:46vh;
   }
   *{box-sizing:border-box}
   html,body{height:100%;margin:0}
-  body{font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg)}
-  #app{display:grid;grid-template-columns:320px 1fr;grid-template-rows:56px 1fr;height:100%}
-  header{grid-column:1/3;display:flex;align-items:center;gap:12px;padding:0 14px;background:var(--panel);border-bottom:1px solid var(--line)}
-  header h1{font-size:15px;margin:0;font-weight:650;white-space:nowrap}
-  header .spacer{flex:1}
-  #search{width:320px;max-width:38vw;padding:7px 10px;border:1px solid var(--line);border-radius:8px;font:inherit}
-  .btn{padding:7px 11px;border:1px solid var(--line);background:var(--panel);border-radius:8px;cursor:pointer;font:inherit;white-space:nowrap}
-  .btn:hover{background:#f0f2f5}
+  body{font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg);overflow:hidden}
+
+  #map{position:fixed;inset:0}
+
+  /* top search bar */
+  #bar{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;gap:8px;padding:10px;padding-top:calc(10px + env(safe-area-inset-top));
+       background:linear-gradient(#f6f7f9ee,#f6f7f900);pointer-events:none}
+  #bar > *{pointer-events:auto}
+  #search{flex:1;min-width:0;max-width:560px;margin:0 auto;padding:11px 13px;border:1px solid var(--line);border-radius:12px;font:inherit;
+          background:var(--panel);box-shadow:0 2px 12px rgba(20,24,35,.12)}
+  .iconbtn{width:42px;height:42px;flex:none;border:1px solid var(--line);background:var(--panel);border-radius:12px;cursor:pointer;
+           font-size:17px;box-shadow:0 2px 12px rgba(20,24,35,.12);display:grid;place-items:center}
+  .iconbtn:active{transform:scale(.94)}
+
+  /* info / relationship panel */
+  #panel{position:fixed;z-index:6;background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
+  #panel.hidden{display:none}
+  #panel-head{display:flex;align-items:flex-start;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line)}
+  #panel-title{font-weight:700;font-size:15px;flex:1;min-width:0}
+  #panel-sub{color:var(--muted);font-size:12px;margin-top:2px}
+  #panel-body{padding:12px 14px;overflow:auto;display:flex;flex-direction:column;gap:12px}
+  #panel .close{border:none;background:#eef1f6;cursor:pointer;border-radius:8px;width:28px;height:28px;font-size:15px;flex:none}
+  .rel{display:flex;flex-direction:column;gap:6px}
+  .rel h4{margin:0;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:#eef1f6;font-weight:600;font-size:13px;align-self:flex-start}
+  .near{display:flex;flex-direction:column;gap:2px}
+  .near button{all:unset;cursor:pointer;display:flex;justify-content:space-between;gap:10px;padding:7px 8px;border-radius:8px}
+  .near button:hover{background:#f0f2f5}
+  .near .d{color:var(--muted);font-variant-numeric:tabular-nums;flex:none}
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+  .btn{padding:9px 12px;border:1px solid var(--line);background:var(--panel);border-radius:10px;cursor:pointer;font:inherit;text-decoration:none;color:var(--ink);display:inline-flex;align-items:center;gap:6px}
   .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-  .btn.primary:hover{filter:brightness(.95)}
-  aside{grid-row:2;grid-column:1;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
-  .aside-top{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
-  .toolrow{display:flex;flex-wrap:wrap;gap:8px}
-  .counts{color:var(--muted);font-size:12px}
-  #list{flex:1;overflow:auto;padding:10px 12px;display:flex;flex-direction:column;gap:10px}
-  .empty{color:var(--muted);font-size:13px;line-height:1.5}
-  .item{border:1px solid var(--line);border-radius:10px;overflow:hidden}
-  .item.sel{border-color:var(--accent);box-shadow:0 0 0 2px rgba(43,108,255,.15)}
-  .item-head{display:flex;align-items:center;gap:6px;padding:7px 8px;background:#fafbfc}
-  .badge{width:22px;height:22px;display:grid;place-items:center;border-radius:6px;background:#eef1f6;font-size:13px;flex:none}
-  .item-head .name{flex:1;min-width:0;border:1px solid transparent;background:transparent;font:inherit;font-weight:600;padding:3px 4px;border-radius:6px}
-  .item-head .name:focus{border-color:var(--line);background:#fff;outline:none}
-  .mini{border:none;background:transparent;cursor:pointer;font-size:13px;color:var(--muted);padding:4px 5px;border-radius:6px}
-  .mini:hover{background:#eceef2;color:var(--ink)}
-  .mini.del:hover{color:var(--danger)}
-  .item-body{padding:8px;display:flex;flex-direction:column;gap:7px}
-  .item-body label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
-  .item-body input[type=color]{width:34px;height:22px;padding:0;border:1px solid var(--line);border-radius:4px;background:none}
-  .item-body textarea{width:100%;min-height:38px;resize:vertical;border:1px solid var(--line);border-radius:7px;padding:6px 7px;font:inherit}
-  .meta{color:var(--muted);font-size:11px}
-  main{grid-row:2;grid-column:2;position:relative}
-  #map{position:absolute;inset:0}
-  .toggle-on{background:var(--accent)!important;border-color:var(--accent)!important;color:#fff!important}
-  #saveState{font-size:12px;color:var(--muted);align-self:center}
-  /* key modal */
-  #keyModal{position:fixed;inset:0;background:rgba(20,24,35,.55);display:none;align-items:center;justify-content:center;z-index:9999}
-  #keyModal.show{display:flex}
-  .card{background:#fff;border-radius:14px;padding:22px;max-width:460px;width:92vw;box-shadow:0 20px 60px rgba(0,0,0,.3)}
-  .card h2{margin:0 0 6px;font-size:16px}
-  .card p{margin:6px 0;color:var(--muted);font-size:13px}
-  .card ol{margin:8px 0;padding-left:18px;color:var(--muted);font-size:12.5px;line-height:1.6}
-  .card input{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font:inherit;margin:8px 0}
-  .card a{color:var(--accent)}
+  .btn:active{transform:scale(.97)}
+
+  /* legend */
+  #legend{position:fixed;z-index:4;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;
+          box-shadow:0 2px 12px rgba(20,24,35,.12);font-size:12px;max-width:52vw}
+  #legend .row{display:flex;align-items:center;gap:7px;padding:2px 0}
+  #legend .dot{width:11px;height:11px;border-radius:50%;border:2px solid #fff;flex:none;box-shadow:0 0 0 1px rgba(0,0,0,.15)}
+  #legend .updated{margin-top:6px;padding-top:6px;border-top:1px solid var(--line);color:var(--muted)}
+  #legend button{all:unset;color:var(--accent);cursor:pointer;font-weight:600}
+
+  #toast{position:fixed;left:50%;transform:translateX(-50%);z-index:9;background:#1c2333;color:#fff;padding:9px 14px;border-radius:10px;
+         font-size:13px;box-shadow:0 6px 24px rgba(0,0,0,.3);transition:opacity .25s;opacity:0;pointer-events:none;max-width:80vw;text-align:center}
+  #toast.show{opacity:1}
+
+  /* desktop: side panel + bottom-left legend */
+  @media (min-width:721px){
+    #panel{top:74px;left:12px;width:344px;max-height:calc(100vh - 96px);border-radius:14px;box-shadow:0 8px 30px rgba(20,24,35,.18)}
+    #legend{left:12px;bottom:16px}
+    #toast{bottom:24px}
+  }
+  /* mobile: bottom sheet */
   @media (max-width:720px){
-    #app{grid-template-columns:1fr;grid-template-rows:56px 40vh 1fr}
-    aside{grid-row:2;grid-column:1;border-right:none;border-bottom:1px solid var(--line)}
-    main{grid-row:3;grid-column:1}
-    #search{max-width:44vw}
+    #panel{left:0;right:0;bottom:0;max-height:var(--sheet-h);border-radius:16px 16px 0 0;box-shadow:0 -6px 30px rgba(20,24,35,.22);
+           padding-bottom:env(safe-area-inset-bottom)}
+    #panel::before{content:"";position:absolute;top:6px;left:50%;transform:translateX(-50%);width:38px;height:4px;border-radius:2px;background:#cdd2da}
+    #panel-head{padding-top:16px}
+    #legend{right:10px;bottom:10px;left:auto}
+    #toast{bottom:calc(12px + env(safe-area-inset-bottom))}
+    #panel:not(.hidden) ~ #legend{bottom:calc(var(--sheet-h) + 10px)}
   }
 </style>
 </head>
 <body>
-<div id="app">
-  <header>
-    <h1>🗺️ Interactive Map Builder</h1>
-    <input id="search" type="text" placeholder="Search a place to jump to…" disabled>
-    <span class="spacer"></span>
-    <span id="saveState"></span>
-    <button class="btn" id="changeKey">API key</button>
-  </header>
+<div id="map"></div>
 
-  <aside>
-    <div class="aside-top">
-      <div class="toolrow">
-        <button class="btn" id="addMarkerBtn">📍 Add marker</button>
-        <button class="btn" id="exportBtn">Export GeoJSON</button>
-        <button class="btn" id="importBtn">Import</button>
-        <button class="btn" id="clearBtn">Clear all</button>
-        <input type="file" id="importFile" accept=".json,.geojson,application/json" hidden>
-      </div>
-      <div class="counts" id="counts">—</div>
-      <div class="counts">Draw regions with the tools on top of the map. Toggle <b>Add marker</b> then click the map to drop POIs. Everything auto-saves to this browser.</div>
+<div id="bar">
+  <input id="search" type="text" placeholder="Search a hotel, restaurant, bar…" autocomplete="off" disabled>
+  <button class="iconbtn" id="locateBtn" title="Where am I">◎</button>
+</div>
+
+<div id="panel" class="hidden">
+  <div id="panel-head">
+    <div style="flex:1;min-width:0">
+      <div id="panel-title">—</div>
+      <div id="panel-sub"></div>
     </div>
-    <div id="list"></div>
-  </aside>
-
-  <main><div id="map"></div></main>
-</div>
-
-<div id="keyModal">
-  <div class="card">
-    <h2>Google Maps API key</h2>
-    <p>This tool runs entirely in your browser and needs your own key.</p>
-    <ol>
-      <li>Open the <a href="https://console.cloud.google.com/google/maps-apis/credentials" target="_blank" rel="noopener">Google Cloud Console → Credentials</a> and create an API key.</li>
-      <li>Enable <b>Maps JavaScript API</b> and <b>Places API</b> for the project (billing must be on; there's a large free monthly tier).</li>
-      <li>While testing from a local file, set the key's application restriction to <b>None</b> (referrer restrictions don't match <code>file://</code>). Lock it down later.</li>
-    </ol>
-    <input id="keyInput" type="text" placeholder="Paste API key here" autocomplete="off" spellcheck="false">
-    <button class="btn primary" id="keySave" style="width:100%">Save &amp; load map</button>
-    <p style="margin-top:10px">Stored only in this browser's <code>localStorage</code>. Clear it anytime with the <b>API key</b> button.</p>
+    <button class="close" id="panelClose" title="Close">✕</button>
   </div>
+  <div id="panel-body"></div>
 </div>
+
+<div id="legend">
+  <div id="legend-cats"></div>
+  <div class="updated" id="legend-updated">loading…</div>
+</div>
+
+<div id="toast"></div>
 
 <script>
 (function(){
   "use strict";
 
   /* ─────────────────────────────────────────────────────────────
-     PASTE YOUR GOOGLE MAPS API KEY BETWEEN THE QUOTES BELOW.
-     Leave it empty ("") to make the page prompt for a key instead
-     and remember it in each visitor's browser.
+     CONFIG
      ───────────────────────────────────────────────────────────── */
+  // Paste your Google Maps API key between the quotes ("" = prompt & remember in browser).
   const HARDCODED_KEY = "";
 
-  const LS_KEY = "imb.apiKey";
-  const LS_DATA = "imb.features.v1";
-  const DEFAULT_COLOR = "#2b6cff";
+  // Public raw URL of your data file. Leave "" to load ./data/japan.geojson from wherever
+  // this page is served. Set it to fetch the data straight from GitHub so updates need
+  // only a `git push` to the data repo — no redeploy of this app.
+  // e.g. "https://raw.githubusercontent.com/USER/REPO/main/data/japan.geojson"
+  const DATA_URL = "";
 
-  let map, drawingManager, autocomplete;
-  let features = [];          // {id, kind, name, color, notes, overlay}
-  let addMarkerMode = false;
-  let saveTimer = null;
-  let ready = false;
+  const CATS = {
+    hotel:      { color:"#4361ee", icon:"🛏️",  label:"Hotel" },
+    restaurant: { color:"#e63946", icon:"🍜",  label:"Restaurant" },
+    bar:        { color:"#9d4edd", icon:"🍸",  label:"Bar" },
+    sight:      { color:"#2a9d8f", icon:"⛩️",  label:"Sight" },
+    transit:    { color:"#f4a261", icon:"🚉",  label:"Transit" },
+    other:      { color:"#6b7280", icon:"📍",  label:"Other" }
+  };
+  const DEFAULT_HOOD_COLOR = "#2b6cff";
+  const LS_KEY = "japanmap.apiKey";
+
+  let map, infoWindow, autocomplete, placesSvc;
+  let dataBounds = null;
+  let hoods = [];        // { name, color, polygon, centroid }
+  let pois  = [];        // { name, category, notes, marker, position }
+  let searchMarker = null, meMarker = null;
 
   const $ = (s)=>document.querySelector(s);
-
-  // ---------- API key bootstrap ----------
   const getKey = ()=> HARDCODED_KEY || localStorage.getItem(LS_KEY) || "";
-  const setKey = (k)=> localStorage.setItem(LS_KEY, (k||"").trim());
 
-  function showKeyModal(){
-    $("#keyInput").value = getKey();
-    $("#keyModal").classList.add("show");
-    $("#keyInput").focus();
+  function toast(msg, ms){
+    const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+    clearTimeout(toast._t); toast._t = setTimeout(()=> t.classList.remove("show"), ms||2600);
   }
-  function hideKeyModal(){ $("#keyModal").classList.remove("show"); }
 
+  // ---------- bootstrap Google Maps ----------
   function loadGoogle(){
     const key = getKey();
-    if(!key){ showKeyModal(); return; }
-    if(document.getElementById("gmaps")) { location.reload(); return; }
-    const s = document.createElement("script");
-    s.id = "gmaps";
-    s.async = true;
-    s.src = "https://maps.googleapis.com/maps/api/js?key=" + encodeURIComponent(key) +
-            "&libraries=drawing,places,geometry&callback=__imbInit&loading=async";
-    s.onerror = function(){
-      alert("Could not load Google Maps. Check the key and that Maps JavaScript API is enabled.");
-      showKeyModal();
-    };
-    document.head.appendChild(s);
-  }
-
-  window.gm_authFailure = function(){
-    if(HARDCODED_KEY){
-      alert("Google Maps rejected the built-in API key.\n\nCheck, in Google Cloud Console:\n• Maps JavaScript API + Places API are enabled\n• billing is on\n• the key's HTTP-referrer restriction allows this exact URL (e.g. https://USERNAME.github.io/*)");
+    if(!key){
+      const k = prompt("Google Maps API key\n\nCreate one in Google Cloud Console with Maps JavaScript API + Places API enabled, then paste it here. It is stored only in this browser.");
+      if(k){ localStorage.setItem(LS_KEY, k.trim()); location.reload(); }
       return;
     }
-    alert("Google Maps rejected the API key (invalid, restricted, or billing not enabled). Enter a different key.");
-    localStorage.removeItem(LS_KEY);
-    showKeyModal();
+    const s = document.createElement("script");
+    s.async = true;
+    s.src = "https://maps.googleapis.com/maps/api/js?key=" + encodeURIComponent(key) +
+            "&libraries=places,geometry&callback=__init&loading=async";
+    s.onerror = ()=> toast("Could not load Google Maps — check the API key.", 6000);
+    document.head.appendChild(s);
+  }
+  window.gm_authFailure = function(){
+    toast("Google rejected the API key (restriction / billing / APIs).", 8000);
+    if(!HARDCODED_KEY){ localStorage.removeItem(LS_KEY); }
   };
-
-  $("#keySave").addEventListener("click", function(){
-    const v = $("#keyInput").value.trim();
-    if(!v){ $("#keyInput").focus(); return; }
-    setKey(v);
-    hideKeyModal();
-    loadGoogle();
-  });
-  $("#keyInput").addEventListener("keydown", e=>{ if(e.key==="Enter") $("#keySave").click(); });
-  if(HARDCODED_KEY) $("#changeKey").style.display = "none";
-  else $("#changeKey").addEventListener("click", showKeyModal);
-
-  // ---------- helpers ----------
-  const uid = ()=> Math.random().toString(36).slice(2,9);
-  const escapeHtml = (s)=> (s||"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-  const fmtLen = (m)=> m>1000 ? (m/1000).toFixed(2)+" km" : m.toFixed(0)+" m";
-  const fmtArea = (a)=> a>1e6 ? (a/1e6).toFixed(2)+" km²" : a>1e4 ? (a/1e4).toFixed(2)+" ha" : a.toFixed(0)+" m²";
-  const iconFor = (k)=> ({marker:"📍",polygon:"⬠",polyline:"〰️",rectangle:"▭",circle:"◯"}[k]||"•");
-
-  function shapeStyle(color){
-    color = color || DEFAULT_COLOR;
-    return { fillColor:color, fillOpacity:0.15, strokeColor:color, strokeWeight:2,
-             editable:true, draggable:true, clickable:true };
-  }
-  function lineStyle(color){
-    return { strokeColor: color||DEFAULT_COLOR, strokeWeight:3, editable:true, draggable:true, clickable:true };
-  }
-  function defaultName(kind){
-    const n = features.filter(f=>f.kind===kind).length + 1;
-    const label = {marker:"Marker",polygon:"Region",polyline:"Path",rectangle:"Rectangle",circle:"Circle"}[kind]||"Feature";
-    return label + " " + n;
-  }
 
   // ---------- init ----------
-  window.__imbInit = function(){
-    hideKeyModal();
-    const saved = loadData();
-    const view = saved.view;
+  window.__init = async function(){
     map = new google.maps.Map($("#map"), {
-      center: view ? view.center : {lat:39.5, lng:-98.35},
-      zoom:   view ? view.zoom   : 4,
-      mapTypeControl:true, streetViewControl:false, fullscreenControl:true,
-      mapTypeId: "roadmap"
+      center:{lat:35.68, lng:139.75}, zoom:11,
+      mapTypeControl:false, streetViewControl:false, fullscreenControl:false,
+      clickableIcons:false,
+      gestureHandling:"greedy",
+      controlSize: 32
     });
-    map.addListener("idle", scheduleSave);
+    infoWindow = new google.maps.InfoWindow();
+    placesSvc = new google.maps.places.PlacesService(map);
 
-    drawingManager = new google.maps.drawing.DrawingManager({
-      drawingMode:null,
-      drawingControl:true,
-      drawingControlOptions:{
-        position: google.maps.ControlPosition.TOP_CENTER,
-        drawingModes:["marker","polyline","polygon","rectangle","circle"]
-      },
-      markerOptions:{ draggable:true },
-      polygonOptions: shapeStyle(),
-      polylineOptions: lineStyle(),
-      rectangleOptions: shapeStyle(),
-      circleOptions: shapeStyle()
-    });
-    drawingManager.setMap(map);
+    map.addListener("click", ()=> infoWindow.close());
 
-    google.maps.event.addListener(drawingManager, "overlaycomplete", function(e){
-      drawingManager.setDrawingMode(null);
-      addFeature({ kind:e.type, overlay:e.overlay });
-    });
-
-    map.addListener("click", function(e){
-      if(!addMarkerMode) return;
-      const m = new google.maps.Marker({ position:e.latLng, map, draggable:true });
-      addFeature({ kind:"marker", overlay:m });
-    });
-
-    // Places search
+    // search
     const input = $("#search");
     input.disabled = false;
-    autocomplete = new google.maps.places.Autocomplete(input, { fields:["geometry","name"] });
-    autocomplete.addListener("place_changed", function(){
+    autocomplete = new google.maps.places.Autocomplete(input, {
+      fields:["geometry","name","formatted_address"]
+    });
+    autocomplete.addListener("place_changed", ()=>{
       const p = autocomplete.getPlace();
-      if(!p || !p.geometry) return;
-      if(p.geometry.viewport) map.fitBounds(p.geometry.viewport);
-      else { map.panTo(p.geometry.location); map.setZoom(15); }
+      if(p && p.geometry) return dropSearch(p.geometry.location, p.name, p.formatted_address);
+      // no structured pick — fall through to text query
+      runTextQuery(input.value);
+    });
+    input.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter"){
+        setTimeout(()=>{ if(!autocomplete.getPlace() || !autocomplete.getPlace().geometry) runTextQuery(input.value); }, 60);
+      }
     });
 
-    (saved.features || []).forEach(restoreFeature);
-    ready = true;
-    renderList();
+    $("#locateBtn").addEventListener("click", locateMe);
+    $("#panelClose").addEventListener("click", clearSearch);
+
+    buildLegend();
+    await loadData(true);
   };
 
-  // ---------- feature lifecycle ----------
-  function addFeature(opt){
-    const f = {
-      id: opt.id || uid(),
-      kind: opt.kind,
-      name: opt.name || defaultName(opt.kind),
-      color: opt.color || DEFAULT_COLOR,
-      notes: opt.notes || "",
-      overlay: opt.overlay
-    };
-    features.push(f);
-    wireOverlay(f);
-    if(ready){ renderList(); scheduleSave(); }
-    return f;
+  // ---------- data ----------
+  function dataSrc(){
+    const base = DATA_URL || "data/japan.geojson";
+    return base + (base.indexOf("?")<0 ? "?" : "&") + "t=" + Date.now();
   }
-
-  function removeFeature(f){
-    f.overlay.setMap(null);
-    features = features.filter(x=>x.id!==f.id);
-    renderList(); scheduleSave();
-  }
-
-  function wireOverlay(f){
-    const o = f.overlay, save = scheduleSave;
-    o.addListener("click", ()=> selectFeature(f.id));
-    if(f.kind==="marker"){
-      o.addListener("dragend", save);
-    } else if(f.kind==="polygon" || f.kind==="polyline"){
-      const path = o.getPath();
-      ["set_at","insert_at","remove_at"].forEach(ev=> path.addListener(ev, save));
-      o.addListener("dragend", save);
-    } else if(f.kind==="rectangle"){
-      o.addListener("bounds_changed", save);
-      o.addListener("dragend", save);
-    } else if(f.kind==="circle"){
-      o.addListener("center_changed", save);
-      o.addListener("radius_changed", save);
-      o.addListener("dragend", save);
-    }
-  }
-
-  function applyColor(f){
-    if(f.kind==="marker") return;
-    if(f.kind==="polyline") f.overlay.setOptions({ strokeColor:f.color });
-    else f.overlay.setOptions({ fillColor:f.color, strokeColor:f.color });
-  }
-
-  function zoomTo(f){
-    const o = f.overlay;
-    if(f.kind==="marker"){ map.panTo(o.getPosition()); map.setZoom(Math.max(map.getZoom(),14)); }
-    else if(f.kind==="circle" || f.kind==="rectangle"){ map.fitBounds(o.getBounds()); }
-    else {
-      const b = new google.maps.LatLngBounds();
-      o.getPath().forEach(ll=> b.extend(ll));
-      map.fitBounds(b);
-    }
-  }
-
-  function selectFeature(id){
-    document.querySelectorAll(".item").forEach(el=> el.classList.toggle("sel", el.dataset.id===id));
-    const el = document.querySelector('.item[data-id="'+id+'"]');
-    if(el) el.scrollIntoView({block:"nearest", behavior:"smooth"});
-  }
-
-  // ---------- persistence ----------
-  function scheduleSave(){
-    if(!ready) return;
-    clearTimeout(saveTimer);
-    $("#saveState").textContent = "Saving…";
-    saveTimer = setTimeout(saveData, 400);
-  }
-  function serializeFeature(f){
-    const o = f.overlay;
-    const d = { id:f.id, kind:f.kind, name:f.name, color:f.color, notes:f.notes };
-    if(f.kind==="marker"){
-      const p=o.getPosition(); d.position={lat:p.lat(), lng:p.lng()};
-    } else if(f.kind==="polygon" || f.kind==="polyline"){
-      d.path = o.getPath().getArray().map(ll=>({lat:ll.lat(), lng:ll.lng()}));
-    } else if(f.kind==="rectangle"){
-      const b=o.getBounds(), ne=b.getNorthEast(), sw=b.getSouthWest();
-      d.bounds={ north:ne.lat(), east:ne.lng(), south:sw.lat(), west:sw.lng() };
-    } else if(f.kind==="circle"){
-      const c=o.getCenter(); d.center={lat:c.lat(), lng:c.lng()}; d.radius=o.getRadius();
-    }
-    return d;
-  }
-  function saveData(){
+  async function loadData(fit){
     try{
-      const data = {
-        view: map ? { center:{lat:map.getCenter().lat(), lng:map.getCenter().lng()}, zoom:map.getZoom() } : null,
-        features: features.map(serializeFeature)
-      };
-      localStorage.setItem(LS_DATA, JSON.stringify(data));
-      $("#saveState").textContent = "Saved";
-    }catch(e){ $("#saveState").textContent = "Save failed"; }
-  }
-  function loadData(){
-    try{ return JSON.parse(localStorage.getItem(LS_DATA)) || {}; }catch(e){ return {}; }
-  }
-  function restoreFeature(d){
-    let overlay;
-    const st = shapeStyle(d.color);
-    if(d.kind==="marker"){
-      overlay = new google.maps.Marker({ position:d.position, map, draggable:true });
-    } else if(d.kind==="polygon"){
-      overlay = new google.maps.Polygon(Object.assign({}, st, { paths:d.path, map }));
-    } else if(d.kind==="polyline"){
-      overlay = new google.maps.Polyline(Object.assign({}, lineStyle(d.color), { path:d.path, map }));
-    } else if(d.kind==="rectangle"){
-      overlay = new google.maps.Rectangle(Object.assign({}, st, {
-        bounds:{ north:d.bounds.north, south:d.bounds.south, east:d.bounds.east, west:d.bounds.west }, map }));
-    } else if(d.kind==="circle"){
-      overlay = new google.maps.Circle(Object.assign({}, st, { center:d.center, radius:d.radius, map }));
-    } else { return; }
-    addFeature({ kind:d.kind, overlay, name:d.name, color:d.color, notes:d.notes, id:d.id });
-  }
-
-  // ---------- list UI ----------
-  function metaFor(f){
-    const o=f.overlay, G=google.maps.geometry.spherical;
-    try{
-      if(f.kind==="marker"){ const p=o.getPosition(); return p.lat().toFixed(5)+", "+p.lng().toFixed(5); }
-      if(f.kind==="circle"){ return "r "+fmtLen(o.getRadius())+" · "+fmtArea(Math.PI*Math.pow(o.getRadius(),2)); }
-      if(f.kind==="rectangle"){
-        const b=o.getBounds(), ne=b.getNorthEast(), sw=b.getSouthWest();
-        const ring=[ne,{lat:ne.lat(),lng:sw.lng()},sw,{lat:sw.lat(),lng:ne.lng()}];
-        return fmtArea(G.computeArea(ring));
-      }
-      if(f.kind==="polygon"){ return o.getPath().getLength()+" pts · "+fmtArea(G.computeArea(o.getPath())); }
-      if(f.kind==="polyline"){ return o.getPath().getLength()+" pts · "+fmtLen(G.computeLength(o.getPath())); }
-    }catch(e){}
-    return "";
-  }
-  function updateCounts(){
-    const r = features.filter(f=>["polygon","rectangle","circle"].includes(f.kind)).length;
-    const m = features.filter(f=>f.kind==="marker").length;
-    const p = features.filter(f=>f.kind==="polyline").length;
-    $("#counts").textContent =
-      r+" region"+(r!==1?"s":"")+" · "+m+" marker"+(m!==1?"s":"")+(p? " · "+p+" path"+(p!==1?"s":"") : "");
-  }
-  function renderList(){
-    const wrap = $("#list");
-    wrap.innerHTML = "";
-    if(!features.length){
-      wrap.innerHTML = '<p class="empty">Nothing yet. Use the shape tools at the top of the map to draw regions/boundaries, or toggle <b>Add marker</b> and click the map to place points of interest.</p>';
-      updateCounts(); return;
+      const res = await fetch(dataSrc(), { cache:"no-store" });
+      if(!res.ok) throw new Error("HTTP " + res.status);
+      const gj = await res.json();
+      renderData(gj, fit);
+      const when = gj.updated ? new Date(gj.updated) : null;
+      $("#legend-updated").innerHTML =
+        (when ? "data updated " + when.toLocaleDateString(undefined,{month:"short",day:"numeric"}) + " · " : "") +
+        '<button id="refreshBtn">refresh</button>';
+      $("#refreshBtn").addEventListener("click", ()=>{ toast("Refreshing data…",1200); loadData(false); });
+    }catch(err){
+      $("#legend-updated").innerHTML = 'could not load data — <button id="refreshBtn">retry</button>';
+      $("#refreshBtn").addEventListener("click", ()=> loadData(fit));
+      toast("Data load failed: " + err.message, 6000);
     }
-    features.forEach(function(f){
-      const el = document.createElement("div");
-      el.className = "item"; el.dataset.id = f.id;
-      const colorCtl = (f.kind!=="marker")
-        ? '<label>Color <input type="color" class="color" value="'+f.color+'"></label>' : "";
-      el.innerHTML =
-        '<div class="item-head">'+
-          '<span class="badge">'+iconFor(f.kind)+'</span>'+
-          '<input class="name" value="'+escapeHtml(f.name)+'">'+
-          '<button class="mini zoom" title="Zoom to">⤢</button>'+
-          '<button class="mini del" title="Delete">✕</button>'+
-        '</div>'+
-        '<div class="item-body">'+
-          colorCtl+
-          '<textarea class="notes" placeholder="Notes / description">'+escapeHtml(f.notes)+'</textarea>'+
-          '<span class="meta">'+metaFor(f)+'</span>'+
-        '</div>';
-      wrap.appendChild(el);
-      el.querySelector(".name").addEventListener("input", e=>{ f.name=e.target.value; scheduleSave(); });
-      el.querySelector(".notes").addEventListener("input", e=>{ f.notes=e.target.value; scheduleSave(); });
-      el.querySelector(".zoom").addEventListener("click", ()=> zoomTo(f));
-      el.querySelector(".del").addEventListener("click", ()=>{ if(confirm('Delete "'+f.name+'"?')) removeFeature(f); });
-      const c = el.querySelector(".color");
-      if(c) c.addEventListener("input", e=>{ f.color=e.target.value; applyColor(f); scheduleSave(); });
-    });
-    updateCounts();
   }
 
-  // ---------- toolbar ----------
-  $("#addMarkerBtn").addEventListener("click", function(){
-    addMarkerMode = !addMarkerMode;
-    this.classList.toggle("toggle-on", addMarkerMode);
-    this.textContent = addMarkerMode ? "📍 Click map to place… (Esc)" : "📍 Add marker";
-    if(map) map.setOptions({ draggableCursor: addMarkerMode ? "crosshair" : null });
-    if(addMarkerMode && drawingManager) drawingManager.setDrawingMode(null);
-  });
-  document.addEventListener("keydown", function(e){
-    if(e.key==="Escape"){
-      if(addMarkerMode) $("#addMarkerBtn").click();
-      if(drawingManager) drawingManager.setDrawingMode(null);
-    }
-  });
-
-  $("#clearBtn").addEventListener("click", function(){
-    if(!features.length) return;
-    if(!confirm("Remove all regions and markers?")) return;
-    features.forEach(f=> f.overlay.setMap(null));
-    features = []; renderList(); scheduleSave();
-  });
-
-  // ---------- GeoJSON ----------
-  function circleToRing(center, radius){
-    const R=6378137, lat=center.lat()*Math.PI/180, lng=center.lng()*Math.PI/180, out=[];
-    for(let i=0;i<=64;i++){
-      const brng=i*2*Math.PI/64;
-      const lat2=Math.asin(Math.sin(lat)*Math.cos(radius/R)+Math.cos(lat)*Math.sin(radius/R)*Math.cos(brng));
-      const lng2=lng+Math.atan2(Math.sin(brng)*Math.sin(radius/R)*Math.cos(lat),
-                                Math.cos(radius/R)-Math.sin(lat)*Math.sin(lat2));
-      out.push([lng2*180/Math.PI, lat2*180/Math.PI]);
-    }
-    return out;
+  function clearRendered(){
+    hoods.forEach(h=>{ h.polygon.setMap(null); if(h.label) h.label.setMap(null); });
+    pois.forEach(p=> p.marker.setMap(null));
+    hoods = []; pois = [];
   }
-  function toGeoJSON(){
-    const fc = { type:"FeatureCollection", features:[] };
-    features.forEach(function(f){
-      const o=f.overlay; let geom=null; const props={ name:f.name, notes:f.notes, color:f.color, kind:f.kind };
-      if(f.kind==="marker"){ const p=o.getPosition(); geom={type:"Point", coordinates:[p.lng(), p.lat()]}; }
-      else if(f.kind==="polyline"){ geom={type:"LineString", coordinates:o.getPath().getArray().map(ll=>[ll.lng(),ll.lat()])}; }
-      else if(f.kind==="polygon"){
-        const r=o.getPath().getArray().map(ll=>[ll.lng(),ll.lat()]);
-        if(r.length) r.push(r[0]);
-        geom={type:"Polygon", coordinates:[r]};
-      }
-      else if(f.kind==="rectangle"){
-        const b=o.getBounds(), ne=b.getNorthEast(), sw=b.getSouthWest();
-        geom={type:"Polygon", coordinates:[[[sw.lng(),sw.lat()],[ne.lng(),sw.lat()],[ne.lng(),ne.lat()],[sw.lng(),ne.lat()],[sw.lng(),sw.lat()]]]};
-      }
-      else if(f.kind==="circle"){
-        props.radius=o.getRadius();
-        props.center=[o.getCenter().lng(), o.getCenter().lat()];
-        geom={type:"Polygon", coordinates:[circleToRing(o.getCenter(), o.getRadius())]};
-      }
-      fc.features.push({ type:"Feature", properties:props, geometry:geom });
-    });
-    return fc;
-  }
-  function download(name, text){
-    const a=document.createElement("a");
-    a.href=URL.createObjectURL(new Blob([text], {type:"application/json"}));
-    a.download=name; document.body.appendChild(a); a.click(); a.remove();
-    URL.revokeObjectURL(a.href);
-  }
-  $("#exportBtn").addEventListener("click", ()=>{
-    download("map-features.geojson", JSON.stringify(toGeoJSON(), null, 2));
-  });
 
-  function fromGeoJSON(fc){
-    (fc.features||[]).forEach(function(gf){
-      const g=gf.geometry, p=gf.properties||{}, color=p.color||DEFAULT_COLOR;
+  function renderData(gj, fit){
+    clearRendered();
+    const b = new google.maps.LatLngBounds();
+    (gj.features || []).forEach((f)=>{
+      const g = f.geometry, pr = f.properties || {};
       if(!g) return;
-      if(g.type==="Point"){
-        restoreFeature({ kind:"marker", position:{lat:g.coordinates[1],lng:g.coordinates[0]}, name:p.name, notes:p.notes, color, id:uid() });
-      } else if(g.type==="LineString"){
-        restoreFeature({ kind:"polyline", path:g.coordinates.map(c=>({lat:c[1],lng:c[0]})), name:p.name, notes:p.notes, color, id:uid() });
-      } else if(g.type==="Polygon"){
-        if(p.kind==="circle" && p.radius && p.center){
-          restoreFeature({ kind:"circle", center:{lat:p.center[1],lng:p.center[0]}, radius:p.radius, name:p.name, notes:p.notes, color, id:uid() });
-        } else {
-          const ring=g.coordinates[0].slice(0,-1).map(c=>({lat:c[1],lng:c[0]}));
-          restoreFeature({ kind:"polygon", path:ring, name:p.name, notes:p.notes, color, id:uid() });
-        }
-      } else if(g.type==="MultiPolygon"){
-        g.coordinates.forEach(function(poly){
-          const ring=poly[0].slice(0,-1).map(c=>({lat:c[1],lng:c[0]}));
-          restoreFeature({ kind:"polygon", path:ring, name:p.name, notes:p.notes, color, id:uid() });
+      if(g.type === "Polygon" || g.type === "MultiPolygon"){
+        const polys = g.type === "Polygon" ? [g.coordinates] : g.coordinates;
+        polys.forEach((rings)=>{
+          const paths = rings.map(r=> r.map(c=> ({lat:c[1], lng:c[0]})));
+          const color = pr.color || DEFAULT_HOOD_COLOR;
+          const polygon = new google.maps.Polygon({
+            paths, map, clickable:true,
+            strokeColor:color, strokeOpacity:.9, strokeWeight:2,
+            fillColor:color, fillOpacity:.14, zIndex:1
+          });
+          const centroid = ringCentroid(paths[0]);
+          polygon.addListener("click", (e)=>{
+            infoWindow.setContent('<b>'+esc(pr.name||"Neighborhood")+'</b>' + (pr.notes?'<br>'+esc(pr.notes):''));
+            infoWindow.setPosition(e.latLng); infoWindow.open(map);
+          });
+          const label = new google.maps.Marker({
+            position: centroid, map, clickable:false, zIndex:2,
+            icon:{ path:google.maps.SymbolPath.CIRCLE, scale:0, strokeOpacity:0, fillOpacity:0 },
+            label:{ text:(pr.name||"").toUpperCase(), color:"#243049", fontSize:"11px", fontWeight:"800" }
+          });
+          hoods.push({ name:pr.name||"Neighborhood", color, polygon, label, centroid });
+          paths[0].forEach(pt=> b.extend(pt));
         });
+      } else if(g.type === "Point"){
+        const pos = { lat:g.coordinates[1], lng:g.coordinates[0] };
+        const cat = CATS[pr.category] ? pr.category : "other";
+        const marker = new google.maps.Marker({
+          position:pos, map, title:pr.name||"", zIndex:3,
+          icon:{ path:google.maps.SymbolPath.CIRCLE, scale:7, fillColor:CATS[cat].color, fillOpacity:1,
+                 strokeColor:"#fff", strokeWeight:2 }
+        });
+        const poi = { name:pr.name||"POI", category:cat, notes:pr.notes||"", marker, position:pos };
+        marker.addListener("click", ()=> openPoi(poi));
+        pois.push(poi);
+        b.extend(pos);
       }
     });
-    renderList(); scheduleSave();
+    dataBounds = b.isEmpty() ? null : b;
+    if(dataBounds && autocomplete) autocomplete.setBounds(dataBounds);
+    if(fit && dataBounds) map.fitBounds(dataBounds, 40);
   }
-  $("#importBtn").addEventListener("click", ()=> $("#importFile").click());
-  $("#importFile").addEventListener("change", function(e){
-    const file = e.target.files[0]; if(!file) return;
-    const rd = new FileReader();
-    rd.onload = ()=>{
-      try{ fromGeoJSON(JSON.parse(rd.result)); }
-      catch(err){ alert("Could not parse that file as GeoJSON."); }
-    };
-    rd.readAsText(file);
-    e.target.value = "";
-  });
 
-  // ---------- go ----------
+  function openPoi(poi){
+    infoWindow.setContent(
+      '<div style="min-width:150px"><b>'+esc(poi.name)+'</b>'+
+      '<div style="color:#6b7280;font-size:12px;margin:2px 0">'+CATS[poi.category].icon+' '+CATS[poi.category].label+'</div>'+
+      (poi.notes ? '<div style="font-size:13px">'+esc(poi.notes)+'</div>' : '')+
+      '<div style="margin-top:6px"><a target="_blank" rel="noopener" href="'+dirUrl(poi.position)+'">Directions ↗</a></div></div>'
+    );
+    infoWindow.open({ map, anchor:poi.marker });
+  }
+
+  // ---------- search result + relationship ----------
+  function runTextQuery(q){
+    if(!q || !q.trim()) return;
+    placesSvc.findPlaceFromQuery(
+      { query:q, fields:["geometry","name","formatted_address"],
+        locationBias: dataBounds || undefined },
+      (r, status)=>{
+        if(status === google.maps.places.PlacesServiceStatus.OK && r && r[0] && r[0].geometry){
+          dropSearch(r[0].geometry.location, r[0].name, r[0].formatted_address);
+        } else {
+          toast("No match for “"+q+"”.", 3000);
+        }
+      }
+    );
+  }
+
+  function dropSearch(latLng, name, addr){
+    if(searchMarker) searchMarker.setMap(null);
+    searchMarker = new google.maps.Marker({
+      position:latLng, map, animation:google.maps.Animation.DROP, zIndex:9,
+      title:name || "Search result"
+    });
+    searchMarker.addListener("click", ()=> showPanel(latLng, name, addr));
+    map.panTo(latLng);
+    if(map.getZoom() < 14) map.setZoom(15);
+    showPanel(latLng, name || "Search result", addr);
+  }
+
+  function clearSearch(){
+    if(searchMarker){ searchMarker.setMap(null); searchMarker = null; }
+    $("#panel").classList.add("hidden");
+  }
+
+  function showPanel(latLng, name, sub){
+    const containing = hoods.filter(h => google.maps.geometry.poly.containsLocation(latLng, h.polygon));
+    let hoodLine;
+    if(containing.length){
+      hoodLine = containing.map(h => '<span class="chip">📍 in '+esc(h.name)+'</span>').join(" ");
+    } else if(hoods.length){
+      const nearest = hoods
+        .map(h => ({ h, d: google.maps.geometry.spherical.computeDistanceBetween(latLng, h.centroid) }))
+        .sort((a,b)=> a.d-b.d)[0];
+      hoodLine = '<span class="chip">outside mapped areas · '+fmtDist(nearest.d)+' from '+esc(nearest.h.name)+'</span>';
+    } else {
+      hoodLine = '<span class="chip">no neighborhoods loaded</span>';
+    }
+
+    const near = pois
+      .map(p => ({ p, d: google.maps.geometry.spherical.computeDistanceBetween(latLng, p.position) }))
+      .sort((a,b)=> a.d-b.d)
+      .slice(0,6);
+
+    const nearHtml = near.length ? (
+      '<div class="rel"><h4>Nearest fixed points</h4><div class="near">' +
+      near.map(n =>
+        '<button data-lat="'+n.p.position.lat+'" data-lng="'+n.p.position.lng+'">'+
+        '<span>'+CATS[n.p.category].icon+' '+esc(n.p.name)+'</span>'+
+        '<span class="d">'+fmtDist(n.d)+'</span></button>'
+      ).join("") + '</div></div>'
+    ) : "";
+
+    $("#panel-title").textContent = name;
+    $("#panel-sub").textContent = sub || (latLng.lat().toFixed(5)+", "+latLng.lng().toFixed(5));
+    $("#panel-body").innerHTML =
+      '<div class="rel"><h4>Neighborhood</h4><div>'+hoodLine+'</div></div>' +
+      nearHtml +
+      '<div class="actions">' +
+        '<a class="btn primary" target="_blank" rel="noopener" href="'+dirUrl(latLng)+'">🧭 Directions</a>' +
+        '<button class="btn" id="fitBtn">Show all</button>' +
+      '</div>';
+
+    $("#panel").classList.remove("hidden");
+    $("#panel-body").querySelectorAll(".near button").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const ll = { lat:+btn.dataset.lat, lng:+btn.dataset.lng };
+        map.panTo(ll); if(map.getZoom()<15) map.setZoom(16);
+        const hit = pois.find(p=> p.position.lat===ll.lat && p.position.lng===ll.lng);
+        if(hit) openPoi(hit);
+      });
+    });
+    $("#fitBtn").addEventListener("click", ()=>{ if(dataBounds) map.fitBounds(dataBounds, 40); });
+  }
+
+  // ---------- my location ----------
+  function locateMe(){
+    if(!navigator.geolocation) return toast("Geolocation not available.", 3000);
+    toast("Locating…", 1500);
+    navigator.geolocation.getCurrentPosition(
+      (pos)=>{
+        const ll = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+        if(meMarker) meMarker.setMap(null);
+        meMarker = new google.maps.Marker({
+          position:ll, map, zIndex:8, title:"You are here",
+          icon:{ path:google.maps.SymbolPath.CIRCLE, scale:8, fillColor:"#1a73e8", fillOpacity:1, strokeColor:"#fff", strokeWeight:3 }
+        });
+        map.panTo(ll); map.setZoom(16);
+        showPanel(ll, "Your location", "");
+      },
+      (err)=> toast("Location error: " + err.message, 4000),
+      { enableHighAccuracy:true, timeout:10000, maximumAge:30000 }
+    );
+  }
+
+  // ---------- helpers ----------
+  function ringCentroid(ring){
+    let x=0,y=0,a=0;
+    for(let i=0,n=ring.length; i<n; i++){
+      const p0=ring[i], p1=ring[(i+1)%n];
+      const cross = p0.lng*p1.lat - p1.lng*p0.lat;
+      a += cross; x += (p0.lng+p1.lng)*cross; y += (p0.lat+p1.lat)*cross;
+    }
+    if(Math.abs(a) < 1e-12){ // degenerate — plain average
+      const s = ring.reduce((o,p)=>({lat:o.lat+p.lat,lng:o.lng+p.lng}),{lat:0,lng:0});
+      return { lat:s.lat/ring.length, lng:s.lng/ring.length };
+    }
+    a *= 0.5;
+    return { lat: y/(6*a), lng: x/(6*a) };
+  }
+  function fmtDist(m){
+    if(m < 950) return Math.round(m/10)*10 + " m";
+    return (m/1000).toFixed(m<9500?1:0) + " km";
+  }
+  function dirUrl(ll){
+    const lat = typeof ll.lat === "function" ? ll.lat() : ll.lat;
+    const lng = typeof ll.lng === "function" ? ll.lng() : ll.lng;
+    return "https://www.google.com/maps/dir/?api=1&destination=" + lat + "," + lng;
+  }
+  function esc(s){ return (s||"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+  function buildLegend(){
+    $("#legend-cats").innerHTML = Object.keys(CATS).map(k=>
+      '<div class="row"><span class="dot" style="background:'+CATS[k].color+'"></span>'+CATS[k].icon+' '+CATS[k].label+'</div>'
+    ).join("");
+  }
+
   loadGoogle();
 })();
 </script>

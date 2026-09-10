@@ -1,91 +1,130 @@
-# Interactive Map Builder
+# Japan Map
 
-A single-page tool for drawing regions/boundaries and dropping points-of-interest markers
-on Google Maps. Draw polygons, rectangles, circles and paths; rename/colour/annotate each
-feature in the sidebar; everything auto-saves to the browser and exports/imports as GeoJSON.
+A personal, online-only map for a trip:
 
-Pure static HTML + the Google Maps JavaScript API. No build step, no backend.
+- **`index.html`** — the **viewer**. Shows your fixed neighborhood regions + points of
+  interest, and lets you search any hotel / restaurant / bar and see where it sits
+  relative to them (which neighborhood it's in, distance to your nearby fixed points,
+  one-tap directions). Mobile-first; installs as an app.
+- **`edit.html`** — the **builder**. Draw the neighborhoods and drop the fixed POIs,
+  then **Export japan.geojson**.
+- **`data/japan.geojson`** — the fixed layer. Ships with a small sample Tokyo set.
+
+Plain static HTML + the Google Maps JavaScript API. No build step, no backend.
 
 ---
 
-## 1. Get a Google Maps API key
+## 1. Google Maps API key
 
-1. In the [Google Cloud Console → Credentials](https://console.cloud.google.com/google/maps-apis/credentials),
-   create an API key.
-2. Enable **Maps JavaScript API** and **Places API** for the project. Billing must be
-   enabled (there is a large free monthly tier; this tool's usage is tiny).
-3. **Restrict the key** (Credentials → your key → *Application restrictions*):
-   - *Website restrictions* → add the URL the site will be served from, e.g.
-     - `https://YOUR-USERNAME.github.io/*`
-     - `http://localhost:*/*` (for local testing via a dev server)
-   - *API restrictions* → limit to **Maps JavaScript API** + **Places API**.
+1. [Google Cloud Console → Credentials](https://console.cloud.google.com/google/maps-apis/credentials)
+   → create an API key.
+2. Enable **Maps JavaScript API** and **Places API** for the project (billing on; the
+   free monthly allowances cover personal use many times over).
+3. Restrict the key → *Application restrictions* → **Websites**, add:
+   - `https://YOUR-PAGES-URL/*`  (e.g. `https://japan-map.pages.dev/*`)
+   - `http://localhost:*/*`  (local testing)
+   *API restrictions* → **Maps JavaScript API** + **Places API** only.
 
-   A Maps JS key is always visible in page source — the website restriction is what makes
-   a leaked key useless anywhere else, so don't skip it.
-
-## 2. Add the key to the page
-
-Open `index.html`, find this line near the top of the `<script>` block, and paste your key:
+Put the key in **both** `index.html` and `edit.html`, on this line near the top of the
+`<script>`:
 
 ```js
-const HARDCODED_KEY = "AIza...your-key...";
+const HARDCODED_KEY = "AIza...";
 ```
 
-Leave it as `""` instead if you'd rather the page prompt each visitor for a key and
-remember it in their browser (nothing committed to the repo).
+(Leave it `""` and the page will prompt for a key and remember it in that browser.)
 
 ---
 
-## 3. Host it
+## 2. Point the viewer at the data
 
-### Option A — GitHub Pages
+In `index.html`:
 
-> Serving Pages from a **private** repo requires a paid plan (Pro / Team / Enterprise).
-> On a free account the repo must be public — in which case leave `HARDCODED_KEY = ""`
-> and rely on the prompt, or accept that the restricted key is exposed. If you need a
-> private repo on a free plan, use Option B.
-
-```bash
-# from this folder, after committing your key change
-git remote add origin https://github.com/YOUR-USERNAME/interactive-map.git
-git push -u origin main
+```js
+const DATA_URL = "https://raw.githubusercontent.com/YOUR-USER/YOUR-REPO/main/data/japan.geojson";
 ```
 
-Then in the repo on github.com: **Settings → Pages → Build and deployment**
-→ Source: *Deploy from a branch* → Branch: `main` / `/ (root)` → **Save**.
-The URL appears there after ~1 minute: `https://YOUR-USERNAME.github.io/interactive-map/`.
+`raw.githubusercontent.com` sends the right CORS headers, so the viewer fetches the data
+**straight from the repo**. Updating the map is then just:
 
-Add that exact URL to the key's website restrictions (step 1.3).
+```
+edit in edit.html  →  Export japan.geojson  →  replace data/japan.geojson  →  git commit && git push
+```
 
-### Option B — Cloudflare Pages (free, works with a private repo)
+Open the app and pull-to-refresh (or tap **refresh** in the legend). **No redeploy of the
+app is needed** — the raw file updates on its own, usually within a minute.
 
-1. Push this folder to a private GitHub repo (the two `git` commands above).
-2. [Cloudflare dashboard](https://dash.cloudflare.com/) → **Workers & Pages** → *Create* →
-   **Pages** → *Connect to Git* → pick the repo.
-3. Framework preset: **None**. Build command: *(empty)*. Output directory: `/`.
-4. Deploy. You get `https://interactive-map-xxx.pages.dev/` — add it to the key
-   restrictions. (Cloudflare Access can put a login in front of it if you want the site
-   itself private, not just the repo.)
+Leave `DATA_URL = ""` to instead load `./data/japan.geojson` from wherever the page is
+served (fine if the app and data live in the same repo; costs a ~20 s redeploy per change).
 
-Netlify and Vercel work the same way (no build command, publish directory `/`).
+---
+
+## 3. Host the viewer
+
+Any static host. Push this folder to GitHub, then:
+
+**Cloudflare Pages** — dash.cloudflare.com → Workers & Pages → Create → Pages → connect the
+repo. Framework preset **None**, build command empty, output dir `/`. Works with a
+**private** repo on the free plan. You get `https://<name>.pages.dev`.
+
+**GitHub Pages** — repo Settings → Pages → Deploy from branch → `main` / root. Note: a
+*private* repo needs a paid plan; a public repo works on free.
+
+Add the resulting URL to the API key's website restrictions (step 1.3).
+
+---
+
+## 4. Put it on your Android phone
+
+### Easiest — no file, no developer mode
+
+Open the hosted URL in **Chrome** → ⋮ menu → **Add to Home screen** → *Install*.
+Chrome builds a real app (WebAPK): own icon, own entry in the app drawer and recents,
+full-screen, uninstalls like any app. Do the same on your friend's phone. This is all you
+actually need for two people.
+
+### If you want an actual `.apk` file
+
+1. Deploy the site (step 3) so it has an HTTPS URL.
+2. Go to **[pwabuilder.com](https://www.pwabuilder.com)**, enter the URL, choose
+   **Android** → **Generate**. It produces a signed `app-release-signed.apk` (plus an
+   `.aab` and a `assetlinks.json`).
+3. Copy the APK to the phone, tap it. Android asks to allow installs from that source
+   (Chrome / Files) — allow it. **Developer mode / USB debugging is not required**; that's
+   only for `adb install` from a PC.
+4. One APK installs on any device — send the same file to your friend.
+5. *(Optional)* host the generated `assetlinks.json` at
+   `/.well-known/assetlinks.json` on the site so the app launches with no address bar.
+
+The APK is a thin shell around the live URL, so app/data updates never need a rebuild —
+you'd only regenerate it if you change the app's name, icon, or URL.
 
 ---
 
 ## Local testing
 
-Referrer restrictions don't apply to `file://`, so either:
-
-- temporarily set the key's *Application restrictions* to **None**, then open `index.html`
-  directly, **or**
-- serve the folder and use the `localhost` restriction:
+Referrer restrictions don't apply to `file://`, and the builder's **Load current** button
+needs `fetch`, so serve the folder:
 
 ```bash
 python -m http.server 8080
-# open http://localhost:8080
 ```
 
-## Data
+Then open `http://localhost:8080/` (viewer) or `http://localhost:8080/edit.html` (builder).
+Temporarily set the key's *Application restrictions* to **None** if `localhost` isn't
+whitelisted yet.
 
-Features + map view persist in `localStorage` per browser. Use **Export GeoJSON** to save a
-portable copy; **Import** merges a GeoJSON file back in. Circles round-trip as 64-point
-polygons that carry their `radius`/`center` so re-importing restores a real circle.
+---
+
+## Data format
+
+`data/japan.geojson` is a normal GeoJSON `FeatureCollection` with an extra top-level
+`updated` timestamp (shown in the viewer's legend).
+
+- **Neighborhoods** — `Polygon` / `MultiPolygon` features. `properties`: `name`, `color`,
+  `notes`.
+- **POIs** — `Point` features. `properties`: `name`, `category`
+  (`hotel` · `restaurant` · `bar` · `sight` · `transit` · `other`), `notes`.
+
+Anything else the builder exports (rectangles, circles, paths) still renders as polygons /
+lines but isn't used by the relationship panel.

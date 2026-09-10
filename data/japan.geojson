@@ -1,0 +1,64 @@
+{
+  "type": "FeatureCollection",
+  "updated": "2026-09-10T00:00:00Z",
+  "note": "Sample Tokyo dataset — replace with your own via edit.html. Neighborhood polygons are rough sketches, not official boundaries.",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "kind": "polygon", "name": "Shibuya", "color": "#e0417a", "notes": "Crossing, department stores, nightlife south of the station." },
+      "geometry": { "type": "Polygon", "coordinates": [[
+        [139.6960, 35.6620], [139.7080, 35.6635], [139.7095, 35.6560],
+        [139.7010, 35.6520], [139.6945, 35.6560], [139.6960, 35.6620]
+      ]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "kind": "polygon", "name": "Shinjuku East / Kabukicho", "color": "#f2a103", "notes": "Golden Gai, Omoide Yokocho, Kabukicho, Isetan." },
+      "geometry": { "type": "Polygon", "coordinates": [[
+        [139.6980, 35.6960], [139.7075, 35.6975], [139.7090, 35.6905],
+        [139.7010, 35.6885], [139.6975, 35.6915], [139.6980, 35.6960]
+      ]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "kind": "polygon", "name": "Shimokitazawa", "color": "#2b9348", "notes": "Vintage shops, tiny bars, live houses, cafes. Low-rise, walkable." },
+      "geometry": { "type": "Polygon", "coordinates": [[
+        [139.6640, 35.6640], [139.6720, 35.6650], [139.6730, 35.6585],
+        [139.6660, 35.6570], [139.6625, 35.6600], [139.6640, 35.6640]
+      ]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "kind": "polygon", "name": "Asakusa", "color": "#4361ee", "notes": "Senso-ji, Nakamise, Sumida riverfront, old-Tokyo feel." },
+      "geometry": { "type": "Polygon", "coordinates": [[
+        [139.7920, 35.7180], [139.8010, 35.7190], [139.8020, 35.7110],
+        [139.7940, 35.7090], [139.7905, 35.7130], [139.7920, 35.7180]
+      ]] }
+    },
+
+    { "type": "Feature",
+      "properties": { "kind": "marker", "name": "Shibuya Crossing", "category": "sight", "notes": "The scramble. Best view from Mag's Park or the Starbucks." },
+      "geometry": { "type": "Point", "coordinates": [139.70048, 35.65953] } },
+    { "type": "Feature",
+      "properties": { "kind": "marker", "name": "Golden Gai", "category": "bar", "notes": "~200 micro-bars in 6 alleys. Some cover charges, many welcome tourists now." },
+      "geometry": { "type": "Point", "coordinates": [139.70475, 35.69403] } },
+    { "type": "Feature",
+      "properties": { "kind": "marker", "name": "Omoide Yokocho", "category": "restaurant", "notes": "\"Memory Lane\" / Piss Alley — yakitori and beer under the tracks." },
+      "geometry": { "type": "Point", "coordinates": [139.69950, 35.69350] } },
+    { "type": "Feature",
+      "properties": { "kind": "marker", "name": "Park Hyatt Tokyo", "category": "hotel", "notes": "Lost in Translation. New York Bar on 52." },
+      "geometry": { "type": "Point", "coordinates": [139.69069, 35.68569] } },
+    { "type": "Feature",
+      "properties": { "kind": "marker", "name": "Senso-ji", "category": "sight", "notes": "Tokyo's oldest temple. Go early or after dark to beat crowds." },
+      "geometry": { "type": "Point", "coordinates": [139.79666, 35.71476] } },
+    { "type": "Feature",
+      "properties": { "kind": "marker", "name": "Tokyo Skytree", "category": "sight", "notes": "634 m. Timed tickets; sunset slots sell out." },
+      "geometry": { "type": "Point", "coordinates": [139.81070, 35.71006] } },
+    { "type": "Feature",
+      "properties": { "kind": "marker", "name": "Shimokitazawa Station", "category": "transit", "notes": "Odakyu + Keio Inokashira lines. ~5 min from Shibuya." },
+      "geometry": { "type": "Point", "coordinates": [139.66803, 35.66132] } },
+    { "type": "Feature",
+      "properties": { "kind": "marker", "name": "teamLab Planets", "category": "sight", "notes": "Toyosu. Barefoot digital-art. Book weeks ahead." },
+      "geometry": { "type": "Point", "coordinates": [139.79052, 35.64880] } }
+  ]
+}
