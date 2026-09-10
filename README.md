@@ -21,18 +21,21 @@ Plain static HTML + the Google Maps JavaScript API. No build step, no backend.
 2. Enable **Maps JavaScript API** and **Places API** for the project (billing on; the
    free monthly allowances cover personal use many times over).
 3. Restrict the key → *Application restrictions* → **Websites**, add:
-   - `https://YOUR-PAGES-URL/*`  (e.g. `https://travelmap.pages.dev/*`)
-   - `http://localhost:*/*`  (local testing)
+   - `https://YOUR-USERNAME.github.io/travelmap/*`  (your Pages URL)
+   - `http://localhost:*/*` and `http://127.0.0.1:*/*`  (local testing)
    *API restrictions* → **Maps JavaScript API** + **Places API** only.
 
-Put the key in **both** `index.html` and `edit.html`, on this line near the top of the
-`<script>`:
+**The key is never committed.** Leave `HARDCODED_KEY = ""` in `index.html` / `edit.html`.
+On first load each page shows a dialog — paste the key once and it's kept in that
+browser's `localStorage` (shared between the two pages, since they're one origin). Redo
+it any time with the **⚙** button in the viewer's top bar. A bad key is cleared
+automatically so you can re-enter it.
 
-```js
-const HARDCODED_KEY = "AIza...";
-```
+Only set `HARDCODED_KEY = "AIza..."` for a private or purely-local build where baking it
+in is convenient.
 
-(Leave it `""` and the page will prompt for a key and remember it in that browser.)
+Because the site is a public GitHub Pages URL, the **website restriction** in step 3 is
+what actually protects the key — anyone who saw it couldn't use it from another origin.
 
 ---
 

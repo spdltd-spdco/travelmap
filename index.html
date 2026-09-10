@@ -62,6 +62,19 @@
          font-size:13px;box-shadow:0 6px 24px rgba(0,0,0,.3);transition:opacity .25s;opacity:0;pointer-events:none;max-width:80vw;text-align:center}
   #toast.show{opacity:1}
 
+  /* api-key dialog */
+  #keymodal{position:fixed;inset:0;z-index:20;background:rgba(20,24,35,.55);display:flex;align-items:center;justify-content:center;padding:18px}
+  #keymodal.hidden{display:none}
+  #keymodal .card{background:var(--panel);border-radius:16px;max-width:440px;width:100%;padding:20px;box-shadow:0 24px 60px rgba(0,0,0,.32)}
+  #keymodal h2{margin:0 0 6px;font-size:16px}
+  #keymodal p{margin:6px 0;color:var(--muted);font-size:12.5px;line-height:1.5}
+  #keymodal p.err{color:var(--danger)}
+  #keymodal a{color:var(--accent)}
+  #keymodal input{width:100%;margin:12px 0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font:inherit}
+  #keymodal .row{display:flex;gap:8px}
+  #keymodal .row .btn{flex:1;justify-content:center}
+  #keymodal .row .btn[hidden]{display:none}
+
   /* desktop: side panel + bottom-left legend */
   @media (min-width:721px){
     #panel{top:74px;left:12px;width:344px;max-height:calc(100vh - 96px);border-radius:14px;box-shadow:0 8px 30px rgba(20,24,35,.18)}
@@ -86,6 +99,7 @@
 <div id="bar">
   <input id="search" type="text" placeholder="Search a hotel, restaurant, bar…" autocomplete="off" disabled>
   <button class="iconbtn" id="locateBtn" title="Where am I">◎</button>
+  <button class="iconbtn" id="keyBtn" title="API key">⚙</button>
 </div>
 
 <div id="panel" class="hidden">
@@ -106,6 +120,20 @@
 
 <div id="toast"></div>
 
+<div id="keymodal" class="hidden">
+  <div class="card">
+    <h2>Google Maps API key</h2>
+    <p>Paste your key once — it's saved in this browser only, never in the app's code.
+       <a href="https://console.cloud.google.com/google/maps-apis/credentials" target="_blank" rel="noopener">Get a key ↗</a>
+       with Maps JavaScript API + Places API enabled.</p>
+    <input id="keyfield" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="AIza…">
+    <div class="row">
+      <button class="btn" id="keycancel">Cancel</button>
+      <button class="btn primary" id="keysave">Save</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (function(){
   "use strict";
@@ -113,7 +141,9 @@
   /* ─────────────────────────────────────────────────────────────
      CONFIG
      ───────────────────────────────────────────────────────────── */
-  // Paste your Google Maps API key between the quotes ("" = prompt & remember in browser).
+  // Google Maps API key. For a public repo, LEAVE THIS "" — the app asks for the key
+  // once and keeps it in this browser's localStorage (never committed, never shown to
+  // other visitors). Only set it here for a private/local build.
   const HARDCODED_KEY = "";
 
   // Public raw URL of your data file. Leave "" to load ./data/japan.geojson from wherever
@@ -131,7 +161,7 @@
     other:      { color:"#6b7280", icon:"📍",  label:"Other" }
   };
   const DEFAULT_HOOD_COLOR = "#2b6cff";
-  const LS_KEY = "japanmap.apiKey";
+  const LS_KEY = "travelmap.apiKey";
 
   let map, infoWindow, autocomplete, placesSvc;
   let dataBounds = null;
@@ -147,24 +177,41 @@
     clearTimeout(toast._t); toast._t = setTimeout(()=> t.classList.remove("show"), ms||2600);
   }
 
-  // ---------- bootstrap Google Maps ----------
+  // ---------- API key (stored per-browser, never in the repo) ----------
+  const KEY_HELP = $("#keymodal p").innerHTML;
+  function showKeyModal(err){
+    const p = $("#keymodal p");
+    p.innerHTML = err || KEY_HELP;
+    p.classList.toggle("err", !!err);
+    $("#keyfield").value = HARDCODED_KEY ? "" : (localStorage.getItem(LS_KEY) || "");
+    $("#keycancel").hidden = !getKey();
+    $("#keymodal").classList.remove("hidden");
+    setTimeout(()=> $("#keyfield").focus(), 50);
+  }
+  function hideKeyModal(){ $("#keymodal").classList.add("hidden"); }
+  $("#keysave").addEventListener("click", ()=>{
+    const v = $("#keyfield").value.trim();
+    if(!v){ $("#keyfield").focus(); return; }
+    localStorage.setItem(LS_KEY, v);
+    location.reload();
+  });
+  $("#keyfield").addEventListener("keydown", (e)=>{ if(e.key === "Enter") $("#keysave").click(); });
+  $("#keycancel").addEventListener("click", hideKeyModal);
+  $("#keyBtn").addEventListener("click", ()=> showKeyModal());
+
   function loadGoogle(){
     const key = getKey();
-    if(!key){
-      const k = prompt("Google Maps API key\n\nCreate one in Google Cloud Console with Maps JavaScript API + Places API enabled, then paste it here. It is stored only in this browser.");
-      if(k){ localStorage.setItem(LS_KEY, k.trim()); location.reload(); }
-      return;
-    }
+    if(!key){ showKeyModal(); return; }
     const s = document.createElement("script");
     s.async = true;
     s.src = "https://maps.googleapis.com/maps/api/js?key=" + encodeURIComponent(key) +
             "&libraries=places,geometry&callback=__init&loading=async";
-    s.onerror = ()=> toast("Could not load Google Maps — check the API key.", 6000);
+    s.onerror = ()=> showKeyModal("Couldn’t load Google Maps with that key. Check it and try again.");
     document.head.appendChild(s);
   }
   window.gm_authFailure = function(){
-    toast("Google rejected the API key (restriction / billing / APIs).", 8000);
-    if(!HARDCODED_KEY){ localStorage.removeItem(LS_KEY); }
+    if(!HARDCODED_KEY) localStorage.removeItem(LS_KEY);
+    showKeyModal("Google rejected that key. Check the key value, that billing is enabled, and that this site’s URL is listed in the key’s website restrictions.");
   };
 
   // ---------- init ----------
