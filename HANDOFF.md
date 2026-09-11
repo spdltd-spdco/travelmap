@@ -36,16 +36,14 @@ friend), nothing sensitive in it. Two pages + one data file:
 
 ## Remotes
 
-- `origin` → `https://github.com/spdltd-spdco/travelmap.git` (public repo, created
-  empty by Cowork). **As of this writing, `main` has not been pushed there yet** — the
-  push needs interactive GitHub sign-in (Git Credential Manager), so it has to be run
-  from an actual terminal, not a headless/background one:
-  ```
-  git push -u origin main
-  ```
+- `origin` → `https://github.com/spdltd-spdco/travelmap.git` (public repo). Auth is a
+  GitHub fine-grained PAT (repo-scoped to `travelmap`, Contents read/write only) stored
+  via `git credential approve` in Windows' credential store — pushes are non-interactive
+  now. Currently at `9ab7999`.
 - `nas` → `\\nasraid\git\TravelMap\TravelMap.git` — a bare repo on the NAS git share
   (same convention as `\\nasraid\git\BetAllaire\BetAllaire.git`), used purely as a dumb
-  storage mirror. No server-side software runs there. Push alongside origin:
+  storage mirror, kept in lockstep with `origin`. No server-side software runs there.
+  Push both together:
   ```
   git push origin main
   git push nas main
@@ -53,32 +51,56 @@ friend), nothing sensitive in it. Two pages + one data file:
 
 ## Outstanding, in order
 
-1. **Push to GitHub** (`git push -u origin main` — owner runs this, needs browser auth).
-2. **Enable GitHub Pages**: repo → Settings → Pages → Deploy from branch → `main` / root
-   → Save. Expected URL: `https://spdltd-spdco.github.io/travelmap/`.
-3. **Verify the raw data URL** now serves the file:
-   `https://raw.githubusercontent.com/spdltd-spdco/travelmap/main/data/japan.geojson`
-   should return 200, a GeoJSON body, and an `access-control-allow-origin` header.
-4. **Google Cloud — blocked on billing.** Project `travelmap-508223` exists, but the
-   Google account (`sstenton@gmail.com`) has no billing account at all. Once one is
-   linked: enable Maps JavaScript API + Places API, create key `travelmap-web`,
-   restrict it —
-   - referrers: `http://localhost:*/*`, `http://127.0.0.1:*/*`,
-     `https://spdltd-spdco.github.io/travelmap/*`
-   - APIs: Maps JavaScript API + Places API only.
-5. Open the deployed site, paste the key once via the **⚙** button.
-6. Replace the sample dataset: curate real neighborhoods/POIs in `edit.html`, **Export
+**Done:**
+1. ✅ Pushed to GitHub — `origin/main` and `nas/main` both at `9ab7999` (includes the
+   `#map` 0-height CSS fix, see below).
+2. ✅ GitHub Pages live at `https://spdltd-spdco.github.io/travelmap/`.
+3. ✅ Raw data URL confirmed: `.../main/data/japan.geojson` returns 200, a GeoJSON body,
+   `access-control-allow-origin: *`.
+4. ✅ Billing linked (account `013F7F-82DF1C-D6F8B2`, free trial) to project
+   `travelmap-508223`.
+5. ✅ Key created — **named "TravelMap"** (not `travelmap-web` as originally planned).
+   APIs enabled on it: Maps JavaScript API, Places API (legacy — what the app's search
+   code actually calls), Places API (New, for a future migration). Website
+   restrictions, as Google's form actually accepts them:
+   ```
+   http://localhost:8080/*
+   http://127.0.0.1:8080/*
+   https://spdltd-spdco.github.io/travelmap/*
+   ```
+   **Important quirk found:** Google's referrer form rejects a wildcard port on
+   `http://` (`http://localhost:*/*` → "Invalid website domain") — it has to be the
+   exact port, `:8080` for the WSL-python local server used in this project. If a local
+   test server ever runs on a different port, add another exact-port entry. Restriction
+   edits took a few minutes to propagate; the app auto-clears a rejected key, so re-paste
+   after any restriction change.
+
+**Outstanding:**
+6. Confirm the key actually works end-to-end (map renders + zooms to the Tokyo sample
+   regions) — was mid-verification, blocked on the referrer propagation delay above.
+7. Replace the sample dataset: curate real neighborhoods/POIs in `edit.html`, **Export
    japan.geojson**, overwrite `data/japan.geojson`, commit, push (both remotes).
-7. Install on phones: Chrome → ⋮ → **Add to Home screen** (WebAPK) is the primary path
+8. Install on phones: Chrome → ⋮ → **Add to Home screen** (WebAPK) is the primary path
    for the owner + one friend. A standalone `.apk` via pwabuilder.com is documented in
    the README as a fallback if a literal installable file is wanted.
 
+## Fixed bugs
+
+- **`#map` rendered 0px tall** (commit `9ab7999`). `google.maps.Map` sets an inline
+  `position:relative` on its container, silently beating our plain `#map{position:...}`
+  rule (inline always wins over a non-`!important` stylesheet rule) and collapsing
+  `inset:0` since a statically-flowed div has no intrinsic height. Fixed with
+  `!important` on `position` in both `index.html` (viewer, positioned against the
+  viewport — also given an explicit `height:100dvh;width:100%` belt-and-suspenders) and
+  `edit.html` (builder, positioned against `<main>`, a sized grid cell — no explicit
+  height there, an `100vh` would overflow past the cell).
+
 ## Cowork prompts already issued
 
-Two rounds, both in the owner's chat history: (1) create the GitHub repo + Google Cloud
-project/key — GitHub side completed, Google Cloud side blocked on billing as above; (2) a
-follow-up to enable Pages and verify the raw data URL once content is pushed. Re-issue
-the Pages/verify prompt after step 1 above if it hasn't run yet.
+Three rounds so far, all in the owner's chat history: (1) create the GitHub repo +
+Google Cloud project/key; (2) enable Pages + verify the raw data URL once content was
+pushed; (3) diagnose the key's referrer restrictions after a `RefererNotAllowedMapError`
+on local testing — resolved, see the website-restrictions block above.
 
 ## Full history
 

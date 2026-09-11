@@ -22,8 +22,16 @@ Plain static HTML + the Google Maps JavaScript API. No build step, no backend.
    free monthly allowances cover personal use many times over).
 3. Restrict the key → *Application restrictions* → **Websites**, add:
    - `https://YOUR-USERNAME.github.io/travelmap/*`  (your Pages URL)
-   - `http://localhost:*/*` and `http://127.0.0.1:*/*`  (local testing)
-   *API restrictions* → **Maps JavaScript API** + **Places API** only.
+   - `http://localhost:PORT/*` and `http://127.0.0.1:PORT/*`  (local testing, exact port —
+     Google's form rejects a wildcard port on `http://`, e.g. `http://localhost:*/*` is
+     refused as an "Invalid website domain". Use whatever port you actually serve on,
+     e.g. `:8080`; add another entry if you ever use a different port.)
+   *API restrictions* → **Maps JavaScript API** + **Places API** only (add the legacy
+   **Places API** specifically if your project also has **Places API (New)** enabled —
+   the app's current search code calls the legacy `Autocomplete`/`PlacesService` classes).
+4. Restriction changes can take a few minutes to propagate — if a fresh key is rejected
+   right after saving restrictions, wait ~5 minutes and try again. A rejected key is
+   auto-cleared by the app, so you'll need to re-paste it.
 
 **The key is never committed.** Leave `HARDCODED_KEY = ""` in `index.html` / `edit.html`.
 On first load each page shows a dialog — paste the key once and it's kept in that
