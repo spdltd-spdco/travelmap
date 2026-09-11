@@ -9,10 +9,14 @@ all. Each region is a deterministic irregular blob around a center point + radiu
 so re-running this script without changing tools/regions.json reproduces the exact
 same shape.
 
-Reads:  tools/regions.json   — name, center [lat,lng], radius_m, color, blurb, notes
-Writes: data/japan.geojson   — replaces Polygon features matching a region's name
-                                by name, leaves Point features (POIs) and any other
-                                polygons untouched, bumps "updated".
+Reads:  tools/regions.json — each region is either:
+          - generated: {name, center [lat,lng], radius_m, color, blurb, notes}
+          - traced:    {name, path [[lat,lng], ...], color, blurb, notes} — hand-traced
+                        corners (e.g. off Google Maps' right-click "What's here?"),
+                        used as-is instead of generating a blob.
+Writes: data/japan.geojson — replaces Polygon features matching a region's name by
+                             name, leaves Point features (POIs) and any other
+                             polygons untouched, bumps "updated".
 
 Usage:
     python3 tools/gen_regions.py
@@ -65,8 +69,20 @@ def make_blob(center, radius_m, name):
     return ring
 
 
+def ring_from_path(path):
+    """path: a list of [lat, lng] points traced by hand (e.g. off Google Maps'
+    right-click "What's here?"). Order doesn't need to be closed already."""
+    ring = [[lng, lat] for lat, lng in path]
+    if ring[0] != ring[-1]:
+        ring.append(ring[0])
+    return ring
+
+
 def build_feature(region):
-    ring = make_blob(region["center"], region["radius_m"], region["name"])
+    if "path" in region:
+        ring = ring_from_path(region["path"])
+    else:
+        ring = make_blob(region["center"], region["radius_m"], region["name"])
     return {
         "type": "Feature",
         "properties": {

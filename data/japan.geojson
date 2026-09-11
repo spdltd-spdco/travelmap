@@ -1,6 +1,6 @@
 {
   "type": "FeatureCollection",
-  "updated": "2026-09-11T18:19:08Z",
+  "updated": "2026-09-11T19:09:03Z",
   "note": "Sample Tokyo dataset — replace with your own via edit.html. Neighborhood polygons are rough sketches, not official boundaries.",
   "features": [
     {
@@ -212,74 +212,42 @@
       "type": "Feature",
       "properties": {
         "kind": "polygon",
-        "name": "Shinjuku East / Kabukicho",
+        "name": "Kabukicho",
         "color": "#f2a103",
-        "blurb": "Neon nightlife blocks, Golden Gai, and Omoide Yokocho.",
-        "notes": "Kabukicho is the entertainment district proper (bars, karaoke, the Godzilla head on the Toho building); Golden Gai's ~200 tiny bars sit just southeast; Omoide Yokocho's yakitori alleys are right by the station's west exit. Isetan and Shinjuku Gyoen are an easy walk south."
+        "blurb": "Neon nightlife blocks packed with bars, karaoke, and clubs.",
+        "notes": "Tokyo's biggest entertainment district — small clubs, karaoke boxes, and the Godzilla head looming over the Toho building. Golden Gai and Omoide Yokocho sit right at its edges. Isetan and Shinjuku Gyoen are an easy walk south. Traced by hand off Google Maps, not generated."
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              139.708476,
-              35.6938
+              139.698815,
+              35.698035
             ],
             [
-              139.708046,
-              35.696165
+              139.707344,
+              35.697843
             ],
             [
-              139.706154,
-              35.69803
+              139.706808,
+              35.694915
             ],
             [
-              139.703451,
-              35.698964
+              139.705499,
+              35.694898
             ],
             [
-              139.700526,
-              35.699046
+              139.704544,
+              35.692763
             ],
             [
-              139.697661,
-              35.698219
+              139.699663,
+              35.693713
             ],
             [
-              139.695387,
-              35.696386
-            ],
-            [
-              139.694807,
-              35.6938
-            ],
-            [
-              139.695876,
-              35.691405
-            ],
-            [
-              139.698042,
-              35.689769
-            ],
-            [
-              139.700617,
-              35.688879
-            ],
-            [
-              139.703353,
-              35.688985
-            ],
-            [
-              139.705763,
-              35.689968
-            ],
-            [
-              139.707558,
-              35.691626
-            ],
-            [
-              139.708476,
-              35.6938
+              139.698815,
+              35.698035
             ]
           ]
         ]
