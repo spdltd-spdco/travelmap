@@ -1,6 +1,6 @@
 {
   "type": "FeatureCollection",
-  "updated": "2026-09-11T19:09:03Z",
+  "updated": "2026-09-11T19:19:58Z",
   "note": "Sample Tokyo dataset — replace with your own via edit.html. Neighborhood polygons are rough sketches, not official boundaries.",
   "features": [
     {
@@ -16,22 +16,6 @@
         "coordinates": [
           139.70048,
           35.65953
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "kind": "marker",
-        "name": "Golden Gai",
-        "category": "bar",
-        "notes": "~200 micro-bars in 6 alleys. Some cover charges, many welcome tourists now."
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.70475,
-          35.69403
         ]
       }
     },
@@ -248,6 +232,43 @@
             [
               139.698815,
               35.698035
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "polygon",
+        "name": "Golden Gai",
+        "color": "#9d4edd",
+        "blurb": "~200 tiny bars packed into six narrow alleys.",
+        "notes": "Each bar seats maybe 5-10 people; many charge a small cover (¥500-1500) plus drinks. Some are locals-only, but a growing number post \"tourists welcome\" signs. Right at Kabukicho's edge — walkable in under 5 minutes from Golden Gai to Omoide Yokocho."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              139.704591,
+              35.694408
+            ],
+            [
+              139.705156,
+              35.694216
+            ],
+            [
+              139.704874,
+              35.693538
+            ],
+            [
+              139.704211,
+              35.693741
+            ],
+            [
+              139.704591,
+              35.694408
             ]
           ]
         ]

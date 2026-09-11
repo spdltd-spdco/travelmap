@@ -24,6 +24,19 @@
       "notes": "Tokyo's biggest entertainment district — small clubs, karaoke boxes, and the Godzilla head looming over the Toho building. Golden Gai and Omoide Yokocho sit right at its edges. Isetan and Shinjuku Gyoen are an easy walk south. Traced by hand off Google Maps, not generated."
     },
     {
+      "name": "Golden Gai",
+      "path": [
+        [35.694408, 139.704591],
+        [35.694216, 139.705156],
+        [35.693538, 139.704874],
+        [35.693741, 139.704211]
+      ],
+      "color": "#9d4edd",
+      "blurb": "~200 tiny bars packed into six narrow alleys.",
+      "notes": "Each bar seats maybe 5-10 people; many charge a small cover (¥500-1500) plus drinks. Some are locals-only, but a growing number post \"tourists welcome\" signs. Right at Kabukicho's edge — walkable in under 5 minutes from Golden Gai to Omoide Yokocho.",
+      "_comment": "Traced by hand; sits inside/adjacent to Kabukicho on purpose (overlapping regions are fine)."
+    },
+    {
       "name": "Harajuku / Omotesando",
       "center": [35.6702, 139.7027],
       "radius_m": 550,
