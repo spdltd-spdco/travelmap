@@ -3,6 +3,15 @@
 Written so a future session (any machine) can pick this up cold. Keep it current as
 things move — it's the source of truth alongside the code itself.
 
+**Testing/verification workflow:** treat `https://spdltd-spdco.github.io/travelmap/` as
+the check of record, not a local server. A local `python3 -m http.server 8080` still
+works fine for the owner's own manual testing in a real browser (it's on the key's
+referrer allow-list) — but Claude's own Browser-pane tool hit a local-preview-proxy
+caching bug that kept serving a stale snapshot of `index.html`/`data/japan.geojson`
+across brand-new tabs and cache-busted URLs, even though direct `curl` and the real
+owner browser were both fine. Don't burn time debugging "why isn't my change showing up
+locally" in an agent session — push and check the live URL instead.
+
 ## What this is
 
 Personal, online-only Google Maps tool for a Japan trip. Two users max (owner + one
