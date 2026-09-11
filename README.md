@@ -110,6 +110,22 @@ actually need for two people.
 The APK is a thin shell around the live URL, so app/data updates never need a rebuild —
 you'd only regenerate it if you change the app's name, icon, or URL.
 
+### Using Firefox or Brave on Android instead of Chrome
+
+The site itself works the same in any of the three — Maps JS, geolocation, and the
+regions menu are plain web APIs, nothing Chrome-specific. Two real differences:
+
+- **"Add to Home screen"**: Brave is Chromium-based, so it installs the same WebAPK as
+  Chrome (own icon, standalone, no address bar). **Firefox for Android does not** build a
+  standalone app from a PWA — its "Add to Home screen" makes a bookmark shortcut that
+  still opens inside Firefox's UI. Everything still works, it just won't be full-screen.
+  If you want the WebAPK experience, use Chrome or Brave for the install step (you can
+  still browse day-to-day in Firefox).
+- **Content blocking**: if the map ever fails to load only in one of these browsers,
+  check its shield/tracking-protection settings for the site — Brave's aggressive
+  Shields or Firefox's strict Enhanced Tracking Protection can occasionally over-block
+  Google subdomains. Lowering protection for this one site (not globally) fixes it.
+
 ---
 
 ## Local testing

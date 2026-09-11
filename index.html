@@ -15,8 +15,10 @@
     --sheet-h:46vh;
   }
   *{box-sizing:border-box}
-  html,body{height:100%;margin:0}
-  body{font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg);overflow:hidden}
+  html,body{height:100%;margin:0;overscroll-behavior:none}
+  body{font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg);overflow:hidden;
+       -webkit-tap-highlight-color:transparent}
+  button,.rgn{touch-action:manipulation;-webkit-user-select:none;user-select:none}
 
   #map{position:fixed!important;inset:0;height:100dvh;width:100%}
   .hoodlabel{position:absolute;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
@@ -29,11 +31,22 @@
   #bar{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;gap:8px;padding:10px;padding-top:calc(10px + env(safe-area-inset-top));
        background:linear-gradient(#f6f7f9ee,#f6f7f900);pointer-events:none}
   #bar > *{pointer-events:auto}
-  #search{flex:1;min-width:0;max-width:560px;margin:0 auto;padding:11px 13px;border:1px solid var(--line);border-radius:12px;font:inherit;
-          background:var(--panel);box-shadow:0 2px 12px rgba(20,24,35,.12)}
-  .iconbtn{width:42px;height:42px;flex:none;border:1px solid var(--line);background:var(--panel);border-radius:12px;cursor:pointer;
+  #search{flex:1;min-width:0;max-width:560px;margin:0 auto;padding:11px 13px;border:1px solid var(--line);border-radius:12px;font-size:16px;font-family:inherit;
+          background:var(--panel);box-shadow:0 2px 12px rgba(20,24,35,.12);touch-action:manipulation}
+  .iconbtn{width:44px;height:44px;flex:none;border:1px solid var(--line);background:var(--panel);border-radius:12px;cursor:pointer;
            font-size:17px;box-shadow:0 2px 12px rgba(20,24,35,.12);display:grid;place-items:center}
   .iconbtn:active{transform:scale(.94)}
+
+  /* regions menu */
+  #regionsMenu{position:fixed;top:calc(66px + env(safe-area-inset-top));right:10px;z-index:6;background:var(--panel);
+              border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 30px rgba(20,24,35,.18);
+              max-height:60vh;max-width:calc(100vw - 20px);width:250px;overflow:auto;padding:6px}
+  #regionsMenu.hidden{display:none}
+  #regionsMenu .hdr{padding:8px 10px 4px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .rgn{display:flex;align-items:center;gap:10px;padding:11px 10px;border-radius:10px;cursor:pointer;width:100%;text-align:left;
+       border:none;background:none;font:inherit;font-size:14px;color:var(--ink)}
+  .rgn:active{background:#f0f2f5}
+  .rgn .sw{width:14px;height:14px;border-radius:4px;flex:none;box-shadow:0 0 0 1px rgba(0,0,0,.15)}
 
   /* info / relationship panel */
   #panel{position:fixed;z-index:6;background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
@@ -103,8 +116,14 @@
 
 <div id="bar">
   <input id="search" type="text" placeholder="Search a hotel, restaurant, bar…" autocomplete="off" disabled>
+  <button class="iconbtn" id="regionsBtn" title="Regions">▤</button>
   <button class="iconbtn" id="locateBtn" title="Where am I">◎</button>
   <button class="iconbtn" id="keyBtn" title="API key">⚙</button>
+</div>
+
+<div id="regionsMenu" class="hidden">
+  <div class="hdr">Jump to a region</div>
+  <div id="regionsList"></div>
 </div>
 
 <div id="panel" class="hidden">
@@ -225,7 +244,8 @@
       mapTypeControl:false, streetViewControl:false, fullscreenControl:false,
       clickableIcons:false,
       gestureHandling:"greedy",
-      controlSize: 32
+      controlSize: 32,
+      zoomControlOptions:{ position: google.maps.ControlPosition.RIGHT_CENTER }
     });
     infoWindow = new google.maps.InfoWindow();
     placesSvc = new google.maps.places.PlacesService(map);
@@ -252,6 +272,11 @@
 
     $("#locateBtn").addEventListener("click", locateMe);
     $("#panelClose").addEventListener("click", clearSearch);
+    $("#regionsBtn").addEventListener("click", (e)=>{ e.stopPropagation(); toggleRegionsMenu(); });
+    document.addEventListener("click", (e)=>{
+      if(!$("#regionsMenu").classList.contains("hidden") && !$("#regionsMenu").contains(e.target)) closeRegionsMenu();
+    });
+    document.addEventListener("keydown", (e)=>{ if(e.key === "Escape") closeRegionsMenu(); });
 
     buildLegend();
     await loadData(true);
@@ -338,17 +363,13 @@
             fillColor:color, fillOpacity:.14, zIndex:1
           });
           const centroid = ringCentroid(paths[0]);
+          const name = pr.name || "Neighborhood";
           polygon.addListener("click", (e)=>{
-            infoWindow.setContent(
-              '<div style="min-width:180px;max-width:260px"><b>'+esc(pr.name||"Neighborhood")+'</b>'+
-              (pr.blurb ? '<div style="color:#6b7280;font-size:12px;margin:2px 0">'+esc(pr.blurb)+'</div>' : '')+
-              (pr.notes ? '<div style="font-size:13px;margin-top:4px">'+esc(pr.notes)+'</div>' : '')+
-              '</div>'
-            );
+            infoWindow.setContent(hoodPopupHtml(name, pr.blurb, pr.notes));
             infoWindow.setPosition(e.latLng); infoWindow.open(map);
           });
-          const label = makeHoodLabel(centroid, pr.name||"Neighborhood", pr.blurb);
-          hoods.push({ name:pr.name||"Neighborhood", color, polygon, label, centroid });
+          const label = makeHoodLabel(centroid, name, pr.blurb);
+          hoods.push({ name, color, polygon, label, centroid, blurb:pr.blurb||"", notes:pr.notes||"" });
           paths[0].forEach(pt=> b.extend(pt));
         });
       } else if(g.type === "Point"){
@@ -368,6 +389,44 @@
     dataBounds = b.isEmpty() ? null : b;
     if(dataBounds && autocomplete) autocomplete.setBounds(dataBounds);
     if(fit && dataBounds) map.fitBounds(dataBounds, 40);
+    buildRegionsMenu();
+  }
+
+  function hoodPopupHtml(name, blurb, notes){
+    return '<div style="min-width:180px;max-width:260px"><b>'+esc(name)+'</b>'+
+      (blurb ? '<div style="color:#6b7280;font-size:12px;margin:2px 0">'+esc(blurb)+'</div>' : '')+
+      (notes ? '<div style="font-size:13px;margin-top:4px">'+esc(notes)+'</div>' : '')+
+      '</div>';
+  }
+
+  // ---------- regions menu ----------
+  function buildRegionsMenu(){
+    const list = $("#regionsList");
+    if(!hoods.length){ list.innerHTML = '<div style="padding:10px;color:var(--muted);font-size:13px">No regions loaded.</div>'; return; }
+    list.innerHTML = hoods.map((h,i)=>
+      '<button class="rgn" data-i="'+i+'"><span class="sw" style="background:'+h.color+'"></span>'+esc(h.name)+'</button>'
+    ).join("");
+    list.querySelectorAll(".rgn").forEach(btn=>{
+      btn.addEventListener("click", ()=> selectHood(hoods[+btn.dataset.i]));
+    });
+  }
+  function toggleRegionsMenu(){ $("#regionsMenu").classList.toggle("hidden"); }
+  function closeRegionsMenu(){ $("#regionsMenu").classList.add("hidden"); }
+
+  function selectHood(h){
+    const b = new google.maps.LatLngBounds();
+    h.polygon.getPath().forEach(pt=> b.extend(pt));
+    map.fitBounds(b, 70);
+    infoWindow.setContent(hoodPopupHtml(h.name, h.blurb, h.notes));
+    infoWindow.setPosition(h.centroid);
+    infoWindow.open(map);
+    pulseHood(h);
+    closeRegionsMenu();
+  }
+  function pulseHood(h){
+    h.polygon.setOptions({ fillOpacity:.5, strokeWeight:4 });
+    clearTimeout(h._pulseT);
+    h._pulseT = setTimeout(()=> h.polygon.setOptions({ fillOpacity:.14, strokeWeight:2 }), 1400);
   }
 
   function openPoi(poi){
