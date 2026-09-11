@@ -37,6 +37,19 @@
       "_comment": "Traced by hand; sits inside/adjacent to Kabukicho on purpose (overlapping regions are fine)."
     },
     {
+      "name": "Omoide Yokocho",
+      "path": [
+        [35.693465, 139.699229],
+        [35.693447, 139.699581],
+        [35.692618, 139.699768],
+        [35.692683, 139.699364]
+      ],
+      "color": "#e63946",
+      "blurb": "\"Memory Lane\" — yakitori and beer under the tracks.",
+      "notes": "A narrow strip of alleys wedged against the rail tracks just west of Shinjuku Station, split into Shinjukugado-W and -E. Smoky, cramped, lantern-lit counters serving yakitori and cheap beer since the postwar black-market days. A few minutes' walk from Kabukicho and Golden Gai.",
+      "_comment": "Traced by hand off the visible alley footprint; no official boundary exists for it."
+    },
+    {
       "name": "Harajuku / Omotesando",
       "center": [35.6702, 139.7027],
       "radius_m": 550,

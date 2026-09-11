@@ -1,6 +1,6 @@
 {
   "type": "FeatureCollection",
-  "updated": "2026-09-11T19:19:58Z",
+  "updated": "2026-09-11T19:28:53Z",
   "note": "Sample Tokyo dataset — replace with your own via edit.html. Neighborhood polygons are rough sketches, not official boundaries.",
   "features": [
     {
@@ -16,22 +16,6 @@
         "coordinates": [
           139.70048,
           35.65953
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "kind": "marker",
-        "name": "Omoide Yokocho",
-        "category": "restaurant",
-        "notes": "\"Memory Lane\" / Piss Alley — yakitori and beer under the tracks."
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          139.6995,
-          35.6935
         ]
       }
     },
@@ -269,6 +253,43 @@
             [
               139.704591,
               35.694408
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "polygon",
+        "name": "Omoide Yokocho",
+        "color": "#e63946",
+        "blurb": "\"Memory Lane\" — yakitori and beer under the tracks.",
+        "notes": "A narrow strip of alleys wedged against the rail tracks just west of Shinjuku Station, split into Shinjukugado-W and -E. Smoky, cramped, lantern-lit counters serving yakitori and cheap beer since the postwar black-market days. A few minutes' walk from Kabukicho and Golden Gai."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              139.699229,
+              35.693465
+            ],
+            [
+              139.699581,
+              35.693447
+            ],
+            [
+              139.699768,
+              35.692618
+            ],
+            [
+              139.699364,
+              35.692683
+            ],
+            [
+              139.699229,
+              35.693465
             ]
           ]
         ]
