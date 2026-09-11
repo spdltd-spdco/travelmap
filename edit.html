@@ -40,6 +40,7 @@
   .item-body label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
   .item-body input[type=color]{width:34px;height:22px;padding:0;border:1px solid var(--line);border-radius:4px;background:none}
   .item-body textarea{width:100%;min-height:38px;resize:vertical;border:1px solid var(--line);border-radius:7px;padding:6px 7px;font:inherit}
+  .item-body input.blurb{width:100%;border:1px solid var(--line);border-radius:7px;padding:6px 7px;font:inherit}
   .meta{color:var(--muted);font-size:11px}
   main{grid-row:2;grid-column:2;position:relative}
   #map{position:absolute!important;inset:0}
@@ -262,6 +263,7 @@
       name: opt.name || defaultName(opt.kind),
       color: opt.color || DEFAULT_COLOR,
       category: opt.category || (opt.kind==="marker" ? "other" : undefined),
+      blurb: opt.blurb || "",
       notes: opt.notes || "",
       overlay: opt.overlay
     };
@@ -330,6 +332,7 @@
     const o = f.overlay;
     const d = { id:f.id, kind:f.kind, name:f.name, color:f.color, notes:f.notes };
     if(f.category) d.category = f.category;
+    if(f.blurb) d.blurb = f.blurb;
     if(f.kind==="marker"){
       const p=o.getPosition(); d.position={lat:p.lat(), lng:p.lng()};
     } else if(f.kind==="polygon" || f.kind==="polyline"){
@@ -370,7 +373,7 @@
     } else if(d.kind==="circle"){
       overlay = new google.maps.Circle(Object.assign({}, st, { center:d.center, radius:d.radius, map }));
     } else { return; }
-    addFeature({ kind:d.kind, overlay, name:d.name, color:d.color, notes:d.notes, category:d.category, id:d.id });
+    addFeature({ kind:d.kind, overlay, name:d.name, color:d.color, notes:d.notes, category:d.category, blurb:d.blurb, id:d.id });
   }
 
   // ---------- list UI ----------
@@ -411,6 +414,9 @@
       const catCtl = (f.kind==="marker")
         ? '<label>Type <select class="cat">'+POI_CATS.map(c=>'<option'+(c===f.category?' selected':'')+'>'+c+'</option>').join("")+'</select></label>'
         : "";
+      const blurbCtl = (f.kind!=="marker")
+        ? '<input class="blurb" placeholder="One-line description (always shown on the map)" value="'+escapeHtml(f.blurb)+'">'
+        : "";
       el.innerHTML =
         '<div class="item-head">'+
           '<span class="badge">'+iconFor(f.kind)+'</span>'+
@@ -419,13 +425,15 @@
           '<button class="mini del" title="Delete">✕</button>'+
         '</div>'+
         '<div class="item-body">'+
-          colorCtl+ catCtl+
-          '<textarea class="notes" placeholder="Notes / description">'+escapeHtml(f.notes)+'</textarea>'+
+          colorCtl+ catCtl+ blurbCtl+
+          '<textarea class="notes" placeholder="Deeper description (shown when clicked)">'+escapeHtml(f.notes)+'</textarea>'+
           '<span class="meta">'+metaFor(f)+'</span>'+
         '</div>';
       wrap.appendChild(el);
       el.querySelector(".name").addEventListener("input", e=>{ f.name=e.target.value; scheduleSave(); });
       el.querySelector(".notes").addEventListener("input", e=>{ f.notes=e.target.value; scheduleSave(); });
+      const blurbEl = el.querySelector(".blurb");
+      if(blurbEl) blurbEl.addEventListener("input", e=>{ f.blurb=e.target.value; scheduleSave(); });
       el.querySelector(".zoom").addEventListener("click", ()=> zoomTo(f));
       el.querySelector(".del").addEventListener("click", ()=>{ if(confirm('Delete "'+f.name+'"?')) removeFeature(f); });
       const c = el.querySelector(".color");
@@ -475,6 +483,7 @@
     features.forEach(function(f){
       const o=f.overlay; let geom=null; const props={ name:f.name, notes:f.notes, color:f.color, kind:f.kind };
       if(f.kind==="marker" && f.category) props.category = f.category;
+      if(f.kind!=="marker" && f.blurb) props.blurb = f.blurb;
       if(f.kind==="marker"){ const p=o.getPosition(); geom={type:"Point", coordinates:[p.lng(), p.lat()]}; }
       else if(f.kind==="polyline"){ geom={type:"LineString", coordinates:o.getPath().getArray().map(ll=>[ll.lng(),ll.lat()])}; }
       else if(f.kind==="polygon"){
@@ -515,15 +524,15 @@
         restoreFeature({ kind:"polyline", path:g.coordinates.map(c=>({lat:c[1],lng:c[0]})), name:p.name, notes:p.notes, color, id:uid() });
       } else if(g.type==="Polygon"){
         if(p.kind==="circle" && p.radius && p.center){
-          restoreFeature({ kind:"circle", center:{lat:p.center[1],lng:p.center[0]}, radius:p.radius, name:p.name, notes:p.notes, color, id:uid() });
+          restoreFeature({ kind:"circle", center:{lat:p.center[1],lng:p.center[0]}, radius:p.radius, name:p.name, notes:p.notes, blurb:p.blurb, color, id:uid() });
         } else {
           const ring=g.coordinates[0].slice(0,-1).map(c=>({lat:c[1],lng:c[0]}));
-          restoreFeature({ kind:"polygon", path:ring, name:p.name, notes:p.notes, color, id:uid() });
+          restoreFeature({ kind:"polygon", path:ring, name:p.name, notes:p.notes, blurb:p.blurb, color, id:uid() });
         }
       } else if(g.type==="MultiPolygon"){
         g.coordinates.forEach(function(poly){
           const ring=poly[0].slice(0,-1).map(c=>({lat:c[1],lng:c[0]}));
-          restoreFeature({ kind:"polygon", path:ring, name:p.name, notes:p.notes, color, id:uid() });
+          restoreFeature({ kind:"polygon", path:ring, name:p.name, notes:p.notes, blurb:p.blurb, color, id:uid() });
         });
       }
     });

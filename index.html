@@ -19,6 +19,11 @@
   body{font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg);overflow:hidden}
 
   #map{position:fixed!important;inset:0;height:100dvh;width:100%}
+  .hoodlabel{position:absolute;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
+  .hoodlabel .hn{font-size:11px;font-weight:800;letter-spacing:.03em;color:#243049;white-space:nowrap;
+                 text-shadow:0 1px 0 #fff,0 -1px 0 #fff,1px 0 0 #fff,-1px 0 0 #fff,0 0 6px #fff}
+  .hoodlabel .hb{font-size:10.5px;font-weight:600;color:#3d4759;margin-top:1px;max-width:170px;line-height:1.25;
+                 text-shadow:0 1px 0 #fff,0 -1px 0 #fff,1px 0 0 #fff,-1px 0 0 #fff,0 0 6px #fff}
 
   /* top search bar */
   #bar{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;gap:8px;padding:10px;padding-top:calc(10px + env(safe-area-inset-top));
@@ -282,6 +287,34 @@
     }
   }
 
+  // Name + one-line blurb, always visible. A plain Marker "label" can only show a
+  // single styled line, so this is a small custom OverlayView instead. It's
+  // pointer-events:none, so clicks pass through to the polygon underneath for the
+  // deeper popup.
+  function makeHoodLabel(position, name, blurb){
+    const ov = new google.maps.OverlayView();
+    ov.onAdd = function(){
+      const div = document.createElement("div");
+      div.className = "hoodlabel";
+      div.innerHTML =
+        '<div class="hn">'+esc(name).toUpperCase()+'</div>' +
+        (blurb ? '<div class="hb">'+esc(blurb)+'</div>' : '');
+      ov.div = div;
+      ov.getPanes().floatPane.appendChild(div);
+    };
+    ov.draw = function(){
+      const proj = ov.getProjection();
+      if(!proj || !ov.div) return;
+      const pt = proj.fromLatLngToDivPixel(position);
+      if(pt){ ov.div.style.left = pt.x + "px"; ov.div.style.top = pt.y + "px"; }
+    };
+    ov.onRemove = function(){
+      if(ov.div){ ov.div.remove(); ov.div = null; }
+    };
+    ov.setMap(map);
+    return ov;
+  }
+
   function clearRendered(){
     hoods.forEach(h=>{ h.polygon.setMap(null); if(h.label) h.label.setMap(null); });
     pois.forEach(p=> p.marker.setMap(null));
@@ -306,14 +339,15 @@
           });
           const centroid = ringCentroid(paths[0]);
           polygon.addListener("click", (e)=>{
-            infoWindow.setContent('<b>'+esc(pr.name||"Neighborhood")+'</b>' + (pr.notes?'<br>'+esc(pr.notes):''));
+            infoWindow.setContent(
+              '<div style="min-width:180px;max-width:260px"><b>'+esc(pr.name||"Neighborhood")+'</b>'+
+              (pr.blurb ? '<div style="color:#6b7280;font-size:12px;margin:2px 0">'+esc(pr.blurb)+'</div>' : '')+
+              (pr.notes ? '<div style="font-size:13px;margin-top:4px">'+esc(pr.notes)+'</div>' : '')+
+              '</div>'
+            );
             infoWindow.setPosition(e.latLng); infoWindow.open(map);
           });
-          const label = new google.maps.Marker({
-            position: centroid, map, clickable:false, zIndex:2,
-            icon:{ path:google.maps.SymbolPath.CIRCLE, scale:0, strokeOpacity:0, fillOpacity:0 },
-            label:{ text:(pr.name||"").toUpperCase(), color:"#243049", fontSize:"11px", fontWeight:"800" }
-          });
+          const label = makeHoodLabel(centroid, pr.name||"Neighborhood", pr.blurb);
           hoods.push({ name:pr.name||"Neighborhood", color, polygon, label, centroid });
           paths[0].forEach(pt=> b.extend(pt));
         });

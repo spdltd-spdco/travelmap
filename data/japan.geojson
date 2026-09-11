@@ -1,64 +1,905 @@
 {
   "type": "FeatureCollection",
-  "updated": "2026-09-10T00:00:00Z",
+  "updated": "2026-09-11T18:19:08Z",
   "note": "Sample Tokyo dataset — replace with your own via edit.html. Neighborhood polygons are rough sketches, not official boundaries.",
   "features": [
     {
       "type": "Feature",
-      "properties": { "kind": "polygon", "name": "Shibuya", "color": "#e0417a", "notes": "Crossing, department stores, nightlife south of the station." },
-      "geometry": { "type": "Polygon", "coordinates": [[
-        [139.6960, 35.6620], [139.7080, 35.6635], [139.7095, 35.6560],
-        [139.7010, 35.6520], [139.6945, 35.6560], [139.6960, 35.6620]
-      ]] }
+      "properties": {
+        "kind": "marker",
+        "name": "Shibuya Crossing",
+        "category": "sight",
+        "notes": "The scramble. Best view from Mag's Park or the Starbucks."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          139.70048,
+          35.65953
+        ]
+      }
     },
     {
       "type": "Feature",
-      "properties": { "kind": "polygon", "name": "Shinjuku East / Kabukicho", "color": "#f2a103", "notes": "Golden Gai, Omoide Yokocho, Kabukicho, Isetan." },
-      "geometry": { "type": "Polygon", "coordinates": [[
-        [139.6980, 35.6960], [139.7075, 35.6975], [139.7090, 35.6905],
-        [139.7010, 35.6885], [139.6975, 35.6915], [139.6980, 35.6960]
-      ]] }
+      "properties": {
+        "kind": "marker",
+        "name": "Golden Gai",
+        "category": "bar",
+        "notes": "~200 micro-bars in 6 alleys. Some cover charges, many welcome tourists now."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          139.70475,
+          35.69403
+        ]
+      }
     },
     {
       "type": "Feature",
-      "properties": { "kind": "polygon", "name": "Shimokitazawa", "color": "#2b9348", "notes": "Vintage shops, tiny bars, live houses, cafes. Low-rise, walkable." },
-      "geometry": { "type": "Polygon", "coordinates": [[
-        [139.6640, 35.6640], [139.6720, 35.6650], [139.6730, 35.6585],
-        [139.6660, 35.6570], [139.6625, 35.6600], [139.6640, 35.6640]
-      ]] }
+      "properties": {
+        "kind": "marker",
+        "name": "Omoide Yokocho",
+        "category": "restaurant",
+        "notes": "\"Memory Lane\" / Piss Alley — yakitori and beer under the tracks."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          139.6995,
+          35.6935
+        ]
+      }
     },
     {
       "type": "Feature",
-      "properties": { "kind": "polygon", "name": "Asakusa", "color": "#4361ee", "notes": "Senso-ji, Nakamise, Sumida riverfront, old-Tokyo feel." },
-      "geometry": { "type": "Polygon", "coordinates": [[
-        [139.7920, 35.7180], [139.8010, 35.7190], [139.8020, 35.7110],
-        [139.7940, 35.7090], [139.7905, 35.7130], [139.7920, 35.7180]
-      ]] }
+      "properties": {
+        "kind": "marker",
+        "name": "Park Hyatt Tokyo",
+        "category": "hotel",
+        "notes": "Lost in Translation. New York Bar on 52."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          139.69069,
+          35.68569
+        ]
+      }
     },
-
-    { "type": "Feature",
-      "properties": { "kind": "marker", "name": "Shibuya Crossing", "category": "sight", "notes": "The scramble. Best view from Mag's Park or the Starbucks." },
-      "geometry": { "type": "Point", "coordinates": [139.70048, 35.65953] } },
-    { "type": "Feature",
-      "properties": { "kind": "marker", "name": "Golden Gai", "category": "bar", "notes": "~200 micro-bars in 6 alleys. Some cover charges, many welcome tourists now." },
-      "geometry": { "type": "Point", "coordinates": [139.70475, 35.69403] } },
-    { "type": "Feature",
-      "properties": { "kind": "marker", "name": "Omoide Yokocho", "category": "restaurant", "notes": "\"Memory Lane\" / Piss Alley — yakitori and beer under the tracks." },
-      "geometry": { "type": "Point", "coordinates": [139.69950, 35.69350] } },
-    { "type": "Feature",
-      "properties": { "kind": "marker", "name": "Park Hyatt Tokyo", "category": "hotel", "notes": "Lost in Translation. New York Bar on 52." },
-      "geometry": { "type": "Point", "coordinates": [139.69069, 35.68569] } },
-    { "type": "Feature",
-      "properties": { "kind": "marker", "name": "Senso-ji", "category": "sight", "notes": "Tokyo's oldest temple. Go early or after dark to beat crowds." },
-      "geometry": { "type": "Point", "coordinates": [139.79666, 35.71476] } },
-    { "type": "Feature",
-      "properties": { "kind": "marker", "name": "Tokyo Skytree", "category": "sight", "notes": "634 m. Timed tickets; sunset slots sell out." },
-      "geometry": { "type": "Point", "coordinates": [139.81070, 35.71006] } },
-    { "type": "Feature",
-      "properties": { "kind": "marker", "name": "Shimokitazawa Station", "category": "transit", "notes": "Odakyu + Keio Inokashira lines. ~5 min from Shibuya." },
-      "geometry": { "type": "Point", "coordinates": [139.66803, 35.66132] } },
-    { "type": "Feature",
-      "properties": { "kind": "marker", "name": "teamLab Planets", "category": "sight", "notes": "Toyosu. Barefoot digital-art. Book weeks ahead." },
-      "geometry": { "type": "Point", "coordinates": [139.79052, 35.64880] } }
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "marker",
+        "name": "Senso-ji",
+        "category": "sight",
+        "notes": "Tokyo's oldest temple. Go early or after dark to beat crowds."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          139.79666,
+          35.71476
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "marker",
+        "name": "Tokyo Skytree",
+        "category": "sight",
+        "notes": "634 m. Timed tickets; sunset slots sell out."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          139.8107,
+          35.71006
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "marker",
+        "name": "Shimokitazawa Station",
+        "category": "transit",
+        "notes": "Odakyu + Keio Inokashira lines. ~5 min from Shibuya."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          139.66803,
+          35.66132
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "marker",
+        "name": "teamLab Planets",
+        "category": "sight",
+        "notes": "Toyosu. Barefoot digital-art. Book weeks ahead."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          139.79052,
+          35.6488
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "polygon",
+        "name": "Shibuya",
+        "color": "#e0417a",
+        "blurb": "The scramble crossing, vertical malls, and youth fashion.",
+        "notes": "Center Gai for arcades and cheap food, Dogenzaka for nightlife up the hill, Miyashita Park's rooftop, and Shibuya Sky for the observation deck view back down at the crossing."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              139.70652,
+              35.6595
+            ],
+            [
+              139.706253,
+              35.661751
+            ],
+            [
+              139.704714,
+              35.663793
+            ],
+            [
+              139.702045,
+              35.665001
+            ],
+            [
+              139.698917,
+              35.665136
+            ],
+            [
+              139.695998,
+              35.664086
+            ],
+            [
+              139.694076,
+              35.662014
+            ],
+            [
+              139.693969,
+              35.6595
+            ],
+            [
+              139.694833,
+              35.657283
+            ],
+            [
+              139.696658,
+              35.655586
+            ],
+            [
+              139.699012,
+              35.654204
+            ],
+            [
+              139.702005,
+              35.654142
+            ],
+            [
+              139.704615,
+              35.655307
+            ],
+            [
+              139.705966,
+              35.657361
+            ],
+            [
+              139.70652,
+              35.6595
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "polygon",
+        "name": "Shinjuku East / Kabukicho",
+        "color": "#f2a103",
+        "blurb": "Neon nightlife blocks, Golden Gai, and Omoide Yokocho.",
+        "notes": "Kabukicho is the entertainment district proper (bars, karaoke, the Godzilla head on the Toho building); Golden Gai's ~200 tiny bars sit just southeast; Omoide Yokocho's yakitori alleys are right by the station's west exit. Isetan and Shinjuku Gyoen are an easy walk south."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              139.708476,
+              35.6938
+            ],
+            [
+              139.708046,
+              35.696165
+            ],
+            [
+              139.706154,
+              35.69803
+            ],
+            [
+              139.703451,
+              35.698964
+            ],
+            [
+              139.700526,
+              35.699046
+            ],
+            [
+              139.697661,
+              35.698219
+            ],
+            [
+              139.695387,
+              35.696386
+            ],
+            [
+              139.694807,
+              35.6938
+            ],
+            [
+              139.695876,
+              35.691405
+            ],
+            [
+              139.698042,
+              35.689769
+            ],
+            [
+              139.700617,
+              35.688879
+            ],
+            [
+              139.703353,
+              35.688985
+            ],
+            [
+              139.705763,
+              35.689968
+            ],
+            [
+              139.707558,
+              35.691626
+            ],
+            [
+              139.708476,
+              35.6938
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "polygon",
+        "name": "Harajuku / Omotesando",
+        "color": "#ff5d8f",
+        "blurb": "Teen fashion alley next to a tree-lined design boulevard.",
+        "notes": "Takeshita-dori is the crowded, colorful youth-fashion street; Omotesando is the wide, quiet, tree-lined avenue of flagship stores just south of it. Meiji Shrine's forest entrance is at the west end."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              139.708838,
+              35.6702
+            ],
+            [
+              139.708256,
+              35.672374
+            ],
+            [
+              139.706445,
+              35.674015
+            ],
+            [
+              139.704072,
+              35.675085
+            ],
+            [
+              139.701407,
+              35.674803
+            ],
+            [
+              139.69918,
+              35.673786
+            ],
+            [
+              139.697821,
+              35.672109
+            ],
+            [
+              139.696903,
+              35.6702
+            ],
+            [
+              139.697178,
+              35.66804
+            ],
+            [
+              139.698678,
+              35.666103
+            ],
+            [
+              139.701299,
+              35.665214
+            ],
+            [
+              139.704041,
+              35.665428
+            ],
+            [
+              139.706406,
+              35.666424
+            ],
+            [
+              139.708256,
+              35.668026
+            ],
+            [
+              139.708838,
+              35.6702
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "polygon",
+        "name": "Shimokitazawa",
+        "color": "#2b9348",
+        "blurb": "Vintage shops, tiny live-music bars, low-rise and walkable.",
+        "notes": "A maze of narrow car-free lanes around the station with secondhand clothing, indie theaters, and small live houses. Quieter and more local than the big-name districts; good for an afternoon wander."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              139.674002,
+              35.6613
+            ],
+            [
+              139.673642,
+              35.663508
+            ],
+            [
+              139.671983,
+              35.665358
+            ],
+            [
+              139.669396,
+              35.666268
+            ],
+            [
+              139.666682,
+              35.665993
+            ],
+            [
+              139.664487,
+              35.664879
+            ],
+            [
+              139.663216,
+              35.663172
+            ],
+            [
+              139.662455,
+              35.6613
+            ],
+            [
+              139.662821,
+              35.659273
+            ],
+            [
+              139.664325,
+              35.657555
+            ],
+            [
+              139.666734,
+              35.656793
+            ],
+            [
+              139.669237,
+              35.656896
+            ],
+            [
+              139.671485,
+              35.65775
+            ],
+            [
+              139.673108,
+              35.659301
+            ],
+            [
+              139.674002,
+              35.6613
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "polygon",
+        "name": "Asakusa",
+        "color": "#4361ee",
+        "blurb": "Senso-ji, Nakamise market street, old-Tokyo riverside feel.",
+        "notes": "Nakamise-dori runs straight from the Kaminarimon gate to Senso-ji, lined with souvenir and snack stalls. The Sumida riverfront and Tokyo Skytree view are a short walk east across the river."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              139.804261,
+              35.7118
+            ],
+            [
+              139.803408,
+              35.714501
+            ],
+            [
+              139.801031,
+              35.716413
+            ],
+            [
+              139.797968,
+              35.717022
+            ],
+            [
+              139.795094,
+              35.716802
+            ],
+            [
+              139.792717,
+              35.715651
+            ],
+            [
+              139.791049,
+              35.713931
+            ],
+            [
+              139.790298,
+              35.7118
+            ],
+            [
+              139.790915,
+              35.709616
+            ],
+            [
+              139.792617,
+              35.707846
+            ],
+            [
+              139.795191,
+              35.707145
+            ],
+            [
+              139.797836,
+              35.707047
+            ],
+            [
+              139.800491,
+              35.707737
+            ],
+            [
+              139.80299,
+              35.709262
+            ],
+            [
+              139.804261,
+              35.7118
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "polygon",
+        "name": "Akihabara",
+        "color": "#8338ec",
+        "blurb": "Electronics, anime/manga stores, arcades, maid cafes.",
+        "notes": "Multi-floor electronics and hobby stores line the main strip north from the station; side streets have retro-game shops, arcades, and idol/maid cafes. Gets loud and crowded on weekends."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              139.779905,
+              35.7023
+            ],
+            [
+              139.779082,
+              35.704092
+            ],
+            [
+              139.777697,
+              35.705555
+            ],
+            [
+              139.775641,
+              35.70636
+            ],
+            [
+              139.773331,
+              35.706458
+            ],
+            [
+              139.77119,
+              35.70567
+            ],
+            [
+              139.769611,
+              35.704212
+            ],
+            [
+              139.768618,
+              35.7023
+            ],
+            [
+              139.768953,
+              35.700131
+            ],
+            [
+              139.770365,
+              35.698089
+            ],
+            [
+              139.772994,
+              35.696942
+            ],
+            [
+              139.775995,
+              35.696981
+            ],
+            [
+              139.778415,
+              35.698314
+            ],
+            [
+              139.779632,
+              35.700293
+            ],
+            [
+              139.779905,
+              35.7023
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "polygon",
+        "name": "Ginza",
+        "color": "#c9184a",
+        "blurb": "Upscale flagship shopping and old-money department stores.",
+        "notes": "Chuo-dori closes to cars on weekend afternoons, turning the main strip into a pedestrian shopping street. Kabuki-za theater is at the southeast edge if you want a short-act ticket."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              139.771261,
+              35.6717
+            ],
+            [
+              139.770151,
+              35.673715
+            ],
+            [
+              139.768379,
+              35.675142
+            ],
+            [
+              139.766198,
+              35.675964
+            ],
+            [
+              139.763809,
+              35.675938
+            ],
+            [
+              139.761605,
+              35.675159
+            ],
+            [
+              139.760001,
+              35.673656
+            ],
+            [
+              139.759528,
+              35.6717
+            ],
+            [
+              139.760198,
+              35.669821
+            ],
+            [
+              139.761681,
+              35.668319
+            ],
+            [
+              139.76371,
+              35.66711
+            ],
+            [
+              139.766453,
+              35.666527
+            ],
+            [
+              139.769401,
+              35.667217
+            ],
+            [
+              139.771226,
+              35.669264
+            ],
+            [
+              139.771261,
+              35.6717
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "polygon",
+        "name": "Roppongi",
+        "color": "#3a86ff",
+        "blurb": "Nightlife strip by day, major art museums by daylight.",
+        "notes": "Roppongi Hills and Tokyo Midtown anchor the art-museum side (Mori Art Museum, National Art Center nearby); after dark the streets toward Roppongi Crossing turn into one of Tokyo's busiest bar/club areas, popular with tourists and expats."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              139.73787,
+              35.6627
+            ],
+            [
+              139.737272,
+              35.664841
+            ],
+            [
+              139.735624,
+              35.666596
+            ],
+            [
+              139.733188,
+              35.667642
+            ],
+            [
+              139.730408,
+              35.667657
+            ],
+            [
+              139.728167,
+              35.666402
+            ],
+            [
+              139.726976,
+              35.664588
+            ],
+            [
+              139.726461,
+              35.6627
+            ],
+            [
+              139.726766,
+              35.660731
+            ],
+            [
+              139.727882,
+              35.658708
+            ],
+            [
+              139.730391,
+              35.657685
+            ],
+            [
+              139.733243,
+              35.657562
+            ],
+            [
+              139.735609,
+              35.658819
+            ],
+            [
+              139.737405,
+              35.660507
+            ],
+            [
+              139.73787,
+              35.6627
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "polygon",
+        "name": "Ueno",
+        "color": "#06923e",
+        "blurb": "Big park with museums and a zoo, plus a chaotic market street.",
+        "notes": "Ueno Park holds the Tokyo National Museum, the zoo, and a famous cherry-blossom tunnel in spring. Ameyoko, the old black-market street, runs along the train tracks just south with cheap food and stalls."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              139.780271,
+              35.7141
+            ],
+            [
+              139.779747,
+              35.716191
+            ],
+            [
+              139.77814,
+              35.717908
+            ],
+            [
+              139.77574,
+              35.718866
+            ],
+            [
+              139.772992,
+              35.719107
+            ],
+            [
+              139.770139,
+              35.718438
+            ],
+            [
+              139.768004,
+              35.716601
+            ],
+            [
+              139.767454,
+              35.7141
+            ],
+            [
+              139.768509,
+              35.711797
+            ],
+            [
+              139.770423,
+              35.710051
+            ],
+            [
+              139.772971,
+              35.709018
+            ],
+            [
+              139.775818,
+              35.709055
+            ],
+            [
+              139.77825,
+              35.71018
+            ],
+            [
+              139.779689,
+              35.712032
+            ],
+            [
+              139.780271,
+              35.7141
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "polygon",
+        "name": "Nakameguro",
+        "color": "#ee9b00",
+        "blurb": "Canal-side cafes and boutiques, famous for spring blossoms.",
+        "notes": "The Meguro River is lined with cherry trees (packed at peak bloom, lit up at night) and, year-round, small independent cafes, bakeries, and clothing shops. Quieter and more residential than the big districts."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              139.703877,
+              35.6446
+            ],
+            [
+              139.703044,
+              35.646222
+            ],
+            [
+              139.701603,
+              35.647355
+            ],
+            [
+              139.699859,
+              35.648014
+            ],
+            [
+              139.697885,
+              35.648214
+            ],
+            [
+              139.695801,
+              35.647758
+            ],
+            [
+              139.694086,
+              35.646484
+            ],
+            [
+              139.693219,
+              35.6446
+            ],
+            [
+              139.693923,
+              35.642652
+            ],
+            [
+              139.695723,
+              35.641362
+            ],
+            [
+              139.697888,
+              35.640998
+            ],
+            [
+              139.699891,
+              35.64107
+            ],
+            [
+              139.701829,
+              35.641616
+            ],
+            [
+              139.703406,
+              35.642837
+            ],
+            [
+              139.703877,
+              35.6446
+            ]
+          ]
+        ]
+      }
+    }
   ]
 }

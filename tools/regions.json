@@ -1,0 +1,85 @@
+{
+  "_comment": "Input for gen_regions.py. Each entry becomes one neighborhood polygon in data/japan.geojson. center is [lat, lng]; radius_m is the rough walkable extent used to generate a natural-looking boundary (these are illustrative areas, not surveyed/administrative boundaries). blurb = one-line, always visible on the map. notes = deeper description, shown only in the click popup. Re-run the script after editing this file.",
+  "regions": [
+    {
+      "name": "Shibuya",
+      "center": [35.6595, 139.7005],
+      "radius_m": 600,
+      "color": "#e0417a",
+      "blurb": "The scramble crossing, vertical malls, and youth fashion.",
+      "notes": "Center Gai for arcades and cheap food, Dogenzaka for nightlife up the hill, Miyashita Park's rooftop, and Shibuya Sky for the observation deck view back down at the crossing."
+    },
+    {
+      "name": "Shinjuku East / Kabukicho",
+      "center": [35.6938, 139.7020],
+      "radius_m": 650,
+      "color": "#f2a103",
+      "blurb": "Neon nightlife blocks, Golden Gai, and Omoide Yokocho.",
+      "notes": "Kabukicho is the entertainment district proper (bars, karaoke, the Godzilla head on the Toho building); Golden Gai's ~200 tiny bars sit just southeast; Omoide Yokocho's yakitori alleys are right by the station's west exit. Isetan and Shinjuku Gyoen are an easy walk south."
+    },
+    {
+      "name": "Harajuku / Omotesando",
+      "center": [35.6702, 139.7027],
+      "radius_m": 550,
+      "color": "#ff5d8f",
+      "blurb": "Teen fashion alley next to a tree-lined design boulevard.",
+      "notes": "Takeshita-dori is the crowded, colorful youth-fashion street; Omotesando is the wide, quiet, tree-lined avenue of flagship stores just south of it. Meiji Shrine's forest entrance is at the west end."
+    },
+    {
+      "name": "Shimokitazawa",
+      "center": [35.6613, 139.6680],
+      "radius_m": 500,
+      "color": "#2b9348",
+      "blurb": "Vintage shops, tiny live-music bars, low-rise and walkable.",
+      "notes": "A maze of narrow car-free lanes around the station with secondhand clothing, indie theaters, and small live houses. Quieter and more local than the big-name districts; good for an afternoon wander."
+    },
+    {
+      "name": "Asakusa",
+      "center": [35.7118, 139.7965],
+      "radius_m": 600,
+      "color": "#4361ee",
+      "blurb": "Senso-ji, Nakamise market street, old-Tokyo riverside feel.",
+      "notes": "Nakamise-dori runs straight from the Kaminarimon gate to Senso-ji, lined with souvenir and snack stalls. The Sumida riverfront and Tokyo Skytree view are a short walk east across the river."
+    },
+    {
+      "name": "Akihabara",
+      "center": [35.7023, 139.7745],
+      "radius_m": 550,
+      "color": "#8338ec",
+      "blurb": "Electronics, anime/manga stores, arcades, maid cafes.",
+      "notes": "Multi-floor electronics and hobby stores line the main strip north from the station; side streets have retro-game shops, arcades, and idol/maid cafes. Gets loud and crowded on weekends."
+    },
+    {
+      "name": "Ginza",
+      "center": [35.6717, 139.7650],
+      "radius_m": 600,
+      "color": "#c9184a",
+      "blurb": "Upscale flagship shopping and old-money department stores.",
+      "notes": "Chuo-dori closes to cars on weekend afternoons, turning the main strip into a pedestrian shopping street. Kabuki-za theater is at the southeast edge if you want a short-act ticket."
+    },
+    {
+      "name": "Roppongi",
+      "center": [35.6627, 139.7318],
+      "radius_m": 550,
+      "color": "#3a86ff",
+      "blurb": "Nightlife strip by day, major art museums by daylight.",
+      "notes": "Roppongi Hills and Tokyo Midtown anchor the art-museum side (Mori Art Museum, National Art Center nearby); after dark the streets toward Roppongi Crossing turn into one of Tokyo's busiest bar/club areas, popular with tourists and expats."
+    },
+    {
+      "name": "Ueno",
+      "center": [35.7141, 139.7744],
+      "radius_m": 600,
+      "color": "#06923e",
+      "blurb": "Big park with museums and a zoo, plus a chaotic market street.",
+      "notes": "Ueno Park holds the Tokyo National Museum, the zoo, and a famous cherry-blossom tunnel in spring. Ameyoko, the old black-market street, runs along the train tracks just south with cheap food and stalls."
+    },
+    {
+      "name": "Nakameguro",
+      "center": [35.6446, 139.6989],
+      "radius_m": 450,
+      "color": "#ee9b00",
+      "blurb": "Canal-side cafes and boutiques, famous for spring blossoms.",
+      "notes": "The Meguro River is lined with cherry trees (packed at peak bloom, lit up at night) and, year-round, small independent cafes, bakeries, and clothing shops. Quieter and more residential than the big districts."
+    }
+  ]
+}
