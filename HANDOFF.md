@@ -4,27 +4,52 @@ Written so a future session (any machine) can pick this up cold. Keep it current
 things move — it's the source of truth alongside the code itself.
 
 **Testing/verification workflow:** treat `https://spdltd-spdco.github.io/travelmap/` as
-the check of record, not a local server. A local `python3 -m http.server 8080` still
-works fine for the owner's own manual testing in a real browser (it's on the key's
-referrer allow-list) — but Claude's own Browser-pane tool hit a local-preview-proxy
-caching bug that kept serving a stale snapshot of `index.html`/`data/japan.geojson`
-across brand-new tabs and cache-busted URLs, even though direct `curl` and the real
-owner browser were both fine. Don't burn time debugging "why isn't my change showing up
-locally" in an agent session — push and check the live URL instead.
+the check of record, not a local server. A local `python3 -m http.server 8080` (via WSL)
+still works fine for the owner's own manual testing in a real browser (it's on the key's
+referrer allow-list) — but Claude's own Browser-pane tool has repeatedly hit caching
+layers (a local-preview-proxy bug, and separately GitHub Pages' own `Cache-Control:
+max-age=600` on the live site) that serve a stale snapshot even across brand-new tabs.
+Direct `curl` and the owner's real browser are unaffected. If a just-pushed change
+doesn't show up when checking via the Browser pane, re-navigate with a `?r=<n>`
+cache-busting query string before concluding something's broken.
 
 ## What this is
 
 Personal, online-only Google Maps tool for a Japan trip. Two users max (owner + one
-friend), nothing sensitive in it. Two pages + one data file:
+friend), nothing sensitive in it. Two pages + one data file + a generator script:
 
 - `index.html` — the **viewer**: fixed neighborhood regions + categorized POIs from
-  `data/japan.geojson`, live Places search that drops a pin and shows its relationship
-  to the fixed layer (containing/nearest neighborhood, nearest fixed POIs + distances,
-  directions deep link), geolocation "where am I".
+  `data/japan.geojson`, a **regions menu** (▤ button in the top bar) that lists every
+  region and jumps/pulses/pops up whichever one you tap, live Places search that drops a
+  pin and shows its relationship to the fixed layer (containing/nearest neighborhood,
+  nearest fixed POIs + distances, directions deep link), geolocation "where am I".
+  Mobile-tuned for Android Chrome/Brave/Firefox (see README "Using Firefox or Brave").
 - `edit.html` — the **builder**: draw polygons/POIs on a map, exports `japan.geojson`.
-- `data/japan.geojson` — the fixed layer. Currently a **sample Tokyo dataset** (4
-  neighborhoods, 8 POIs) — not yet the owner's real curated data.
+- `data/japan.geojson` — the fixed layer, generated (don't hand-edit — see below).
+  Currently **12 regions** (3 hand-traced real boundaries, 9 generated blobs — see
+  "Region data status") **+ 6 POIs**.
+- `tools/regions.json` + `tools/gen_regions.py` — the actual source for regions. Each
+  entry is either `{center, radius_m}` (auto-generates a natural-looking irregular blob,
+  deterministic per name) or `{path: [[lat,lng], ...]}` (used as-is — for a hand-traced
+  boundary). Re-run `python3 tools/gen_regions.py` after editing regions.json; it
+  merges into `data/japan.geojson` by name, leaving POI points and any untracked
+  polygons alone, and bumps `updated`.
 - `manifest.webmanifest` + `icons/` — installable as a home-screen app (PWA / WebAPK).
+
+## Region data status
+
+**Hand-traced (real boundaries, via Google Maps right-click "What's here?"):**
+Kabukicho (6 pts), Golden Gai (4 pts, nested inside Kabukicho on purpose), Omoide
+Yokocho (4 pts, also inside/adjacent to Kabukicho). Overlapping regions are fine and
+expected — the relationship panel already handles a point being inside multiple.
+
+**Still generated blobs** (illustrative, not real boundaries — fine for now, but not
+"traced" the way the three above are): Shibuya, Harajuku / Omotesando, Shimokitazawa,
+Asakusa, Akihabara, Ginza, Roppongi, Ueno, Nakameguro.
+
+Tracing more of these the same way (owner right-clicks in the Browser pane, Claude reads
+the coordinates off-screen and relays them back — direct automated right-clicking turned
+out to be too unreliable to use solo) is the natural next content task, whenever wanted.
 
 ## Key design decisions (don't relitigate these without reason)
 
@@ -42,77 +67,73 @@ friend), nothing sensitive in it. Two pages + one data file:
 - **Online-only, by owner's explicit direction** — no offline/service-worker complexity.
 - **POI categories**: hotel / restaurant / bar / sight / transit / other, each with a
   color + icon, set per-marker in the builder.
+- **Regions carry `blurb` (one-line, always visible under the name label) and `notes`**
+  (deeper, shown only in the click/menu popup) — separate fields, don't collapse them.
 
 ## Remotes
 
 - `origin` → `https://github.com/spdltd-spdco/travelmap.git` (public repo). Auth is a
   GitHub fine-grained PAT (repo-scoped to `travelmap`, Contents read/write only) stored
-  via `git credential approve` in Windows' credential store — pushes are non-interactive
-  now. Currently at `9ab7999`.
+  via `git credential approve` in Windows' credential store — pushes are non-interactive.
 - `nas` → `\\nasraid\git\TravelMap\TravelMap.git` — a bare repo on the NAS git share
-  (same convention as `\\nasraid\git\BetAllaire\BetAllaire.git`), used purely as a dumb
-  storage mirror, kept in lockstep with `origin`. No server-side software runs there.
-  Push both together:
+  (same convention as `\\nasraid\git\BetAllaire\BetAllaire.git`), a dumb storage mirror
+  kept in lockstep with `origin`. Needs LAN access (fails cleanly off-network — that's
+  fine, it's not required for day-to-day work, just resync when back on the LAN). No
+  server-side software runs there. Push both together:
   ```
   git push origin main
   git push nas main
   ```
+- Both remotes were last confirmed in sync at `6c0906f` (2026-09-11).
 
-## Outstanding, in order
+## Fully done
 
-**Done:**
-1. ✅ Pushed to GitHub — `origin/main` and `nas/main` both at `9ab7999` (includes the
-   `#map` 0-height CSS fix, see below).
-2. ✅ GitHub Pages live at `https://spdltd-spdco.github.io/travelmap/`.
-3. ✅ Raw data URL confirmed: `.../main/data/japan.geojson` returns 200, a GeoJSON body,
-   `access-control-allow-origin: *`.
-4. ✅ Billing linked (account `013F7F-82DF1C-D6F8B2`, free trial) to project
-   `travelmap-508223`.
-5. ✅ Key created — **named "TravelMap"** (not `travelmap-web` as originally planned).
-   APIs enabled on it: Maps JavaScript API, Places API (legacy — what the app's search
-   code actually calls), Places API (New, for a future migration). Website
-   restrictions, as Google's form actually accepts them:
+1. ✅ GitHub repo + Pages live at `https://spdltd-spdco.github.io/travelmap/`.
+2. ✅ Raw data URL confirmed working (200, GeoJSON, CORS header).
+3. ✅ Billing linked (account `013F7F-82DF1C-D6F8B2`, free trial) to project
+   `travelmap-508223`; Maps JavaScript API + Places API (legacy, which the code actually
+   calls) + Places API (New) all enabled.
+4. ✅ Key (named "TravelMap") created, restricted, and **verified working end-to-end**
+   live on Pages — map renders, zooms to the regions, search/relationship panel/regions
+   menu all confirmed functioning. Website restrictions as Google's form actually
+   accepts them (exact port, no wildcard on `http://`):
    ```
    http://localhost:8080/*
    http://127.0.0.1:8080/*
    https://spdltd-spdco.github.io/travelmap/*
    ```
-   **Important quirk found:** Google's referrer form rejects a wildcard port on
-   `http://` (`http://localhost:*/*` → "Invalid website domain") — it has to be the
-   exact port, `:8080` for the WSL-python local server used in this project. If a local
-   test server ever runs on a different port, add another exact-port entry. Restriction
-   edits took a few minutes to propagate; the app auto-clears a rejected key, so re-paste
-   after any restriction change.
+   Add another exact-port entry if a local test server ever runs on a different port.
+5. ✅ `#map` 0-height CSS bug fixed (see "Fixed bugs").
+6. ✅ Regions menu + mobile/touch optimizations for Android Chrome/Brave/Firefox
+   (overscroll, tap-highlight, touch-action, 44px targets, zoom-control repositioning).
+7. ✅ Kabukicho / Golden Gai / Omoide Yokocho hand-traced to real boundaries.
 
-**Outstanding:**
-6. Confirm the key actually works end-to-end (map renders + zooms to the Tokyo sample
-   regions) — was mid-verification, blocked on the referrer propagation delay above.
-7. Replace the sample dataset: curate real neighborhoods/POIs in `edit.html`, **Export
-   japan.geojson**, overwrite `data/japan.geojson`, commit, push (both remotes).
-8. Install on phones: Chrome → ⋮ → **Add to Home screen** (WebAPK) is the primary path
-   for the owner + one friend. A standalone `.apk` via pwabuilder.com is documented in
-   the README as a fallback if a literal installable file is wanted.
+## Outstanding
+
+- Hand-trace the remaining 9 neighborhoods if/when wanted (see "Region data status").
+- Curate real POIs beyond the original 6 samples, if wanted.
+- Confirm phone install: Chrome/Brave → ⋮ → **Add to Home screen** (WebAPK) for the
+  owner + friend. Not yet confirmed actually done on a real device as of last session.
+- Nothing is blocking; the app is live, working, and usable today.
 
 ## Fixed bugs
 
-- **`#map` rendered 0px tall** (commit `9ab7999`). `google.maps.Map` sets an inline
-  `position:relative` on its container, silently beating our plain `#map{position:...}`
-  rule (inline always wins over a non-`!important` stylesheet rule) and collapsing
-  `inset:0` since a statically-flowed div has no intrinsic height. Fixed with
-  `!important` on `position` in both `index.html` (viewer, positioned against the
-  viewport — also given an explicit `height:100dvh;width:100%` belt-and-suspenders) and
-  `edit.html` (builder, positioned against `<main>`, a sized grid cell — no explicit
-  height there, an `100vh` would overflow past the cell).
+- **`#map` rendered 0px tall.** `google.maps.Map` sets an inline `position:relative` on
+  its container, silently beating our plain `#map{position:...}` rule (inline beats a
+  non-`!important` stylesheet rule) and collapsing `inset:0` since a statically-flowed
+  div has no intrinsic height. Fixed with `!important` on `position` in both
+  `index.html` (viewport-positioned, also given explicit `height:100dvh;width:100%`) and
+  `edit.html` (positioned against `<main>`, a sized grid cell — no explicit height there,
+  a `100vh` would overflow past the cell).
 
-## Cowork prompts already issued
+## Cowork prompts issued (all resolved)
 
-Three rounds so far, all in the owner's chat history: (1) create the GitHub repo +
-Google Cloud project/key; (2) enable Pages + verify the raw data URL once content was
-pushed; (3) diagnose the key's referrer restrictions after a `RefererNotAllowedMapError`
-on local testing — resolved, see the website-restrictions block above.
+Three rounds, all in the owner's chat history: (1) create the GitHub repo + Google Cloud
+project/key; (2) enable Pages + verify the raw data URL; (3) diagnose the key's referrer
+restrictions after a `RefererNotAllowedMapError` on local testing.
 
 ## Full history
 
 Everything is in git — this file plus the code is a complete, current snapshot. No
-credentials, keys, or secrets exist anywhere in the repo or this file (there is no key
-yet; when one exists it belongs only in each device's `localStorage`, never here).
+credentials, keys, or secrets exist anywhere in the repo or this file — the key lives
+only in each device's browser `localStorage`.
